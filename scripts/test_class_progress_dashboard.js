@@ -16,9 +16,9 @@ async function runDashboardVerification() {
   app.use('/api/curriculum', curriculumRouter);
 
   const server = http.createServer(app);
-  await new Promise(resolve => server.listen(0, resolve));
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const port = server.address().port;
-  const baseUrl = `http://localhost:${port}`;
+  const baseUrl = `http://127.0.0.1:${port}`;
 
   let passed = 0;
   let total = 0;

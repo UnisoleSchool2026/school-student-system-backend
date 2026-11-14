@@ -16,7 +16,7 @@ if (fs.existsSync(siblingKatexPath)) {
   } catch (_) {
     // Fallback minimal validator when running strictly inside standalone backend repo without KaTeX package
     katex = {
-      renderToString: (expr) => `<span class="katex">${expr}</span>`
+      renderToString: (expr) => `<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>${expr}</mi></mrow></semantics></math></span><span class="katex-html"><span class="base"><span class="strut"></span>${expr}</span></span></span>`
     };
   }
 }
@@ -235,7 +235,9 @@ edgeCases.forEach((tc, idx) => {
   const output = renderLatexString(tc.input);
   assert(output.includes('katex'), `Edge case ${idx + 1} must include KaTeX span`);
   // Check that the text OUTSIDE of KaTeX math blocks does not have stray LaTeX commands
-  const textOutsideKatex = output.replace(/<span class="katex">[\s\S]*?<\/span><\/span><\/span>/g, '');
+  const textOutsideKatex = output
+    .replace(/<span class="katex"[\s\S]*?<\/span>\s*<\/span>\s*<\/span>/g, '')
+    .replace(/<span class="katex">[\s\S]*?<\/span>/g, '');
   assert(!textOutsideKatex.includes('\\beta'), `Edge case ${idx + 1} must not contain unparsed \\beta in plain text`);
   assert(!textOutsideKatex.includes('\\rightarrow'), `Edge case ${idx + 1} must not contain unparsed \\rightarrow in plain text`);
   assert(!textOutsideKatex.includes('\\frac'), `Edge case ${idx + 1} must not contain unparsed \\frac in plain text`);
