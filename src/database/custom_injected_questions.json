@@ -1,0 +1,244 @@
+[
+  {
+    "id": "snr_p_inj_1794470489751_900",
+    "grade": "12",
+    "subject": "Physics",
+    "subjectKey": "PHYSICS",
+    "stream": "COMMON_SENIOR",
+    "target_exam": "JEE_MAIN",
+    "chapter_name": "Electric Fields and Gauss's Law",
+    "chapter": "Electric Fields and Gauss's Law",
+    "topic": "Electric Fields and Gauss's Law",
+    "subtopic": "Core Derivation",
+    "curriculum_board": "CBSE",
+    "source_category": "CBSE_PYQ",
+    "question_source": "CBSE_PYQ",
+    "pyq_appearance": "CBSE Board Exam (2025 PYQ)",
+    "difficulty": "EASY",
+    "question_format": "MCQ_SINGLE",
+    "benchmark_time_seconds": 30,
+    "marks_weightage": 1,
+    "question_latex": "What is the SI unit of electric flux?",
+    "options_latex": [
+      {
+        "key": "A",
+        "latex": "$N \\cdot m^2 / C$",
+        "is_correct": true,
+        "distractor_trap": null
+      },
+      {
+        "key": "B",
+        "latex": "$N / C$",
+        "is_correct": false,
+        "distractor_trap": "Confuses field unit with flux unit"
+      },
+      {
+        "key": "C",
+        "latex": "$V \\cdot m^2$",
+        "is_correct": false,
+        "distractor_trap": "Mixes potential with flux"
+      },
+      {
+        "key": "D",
+        "latex": "$J / C$",
+        "is_correct": false,
+        "distractor_trap": "Uses energy per charge instead of field per area"
+      }
+    ],
+    "options": [
+      {
+        "key": "A",
+        "latex": "$N \\cdot m^2 / C$",
+        "is_correct": true,
+        "distractor_trap": null
+      },
+      {
+        "key": "B",
+        "latex": "$N / C$",
+        "is_correct": false,
+        "distractor_trap": "Confuses field unit with flux unit"
+      },
+      {
+        "key": "C",
+        "latex": "$V \\cdot m^2$",
+        "is_correct": false,
+        "distractor_trap": "Mixes potential with flux"
+      },
+      {
+        "key": "D",
+        "latex": "$J / C$",
+        "is_correct": false,
+        "distractor_trap": "Uses energy per charge instead of field per area"
+      }
+    ],
+    "correct_answer_latex": "$N \\cdot m^2 / C$",
+    "correct_answer": "A",
+    "solution_latex": "Electric flux is defined as $\\Phi_E = \\int \\vec{E}\\cdot d\\vec{A}$. The electric field $\\vec{E}$ has SI unit $\\text{N/C}$ and the differential area $d\\vec{A}$ has unit $\\text{m}^2$. Therefore the product gives $\\text{N}\\cdot\\text{m}^2\\cdot\\text{C}^{-1}$, which is equivalent to $\\text{V}\\cdot\\text{m}$.",
+    "socratic_hints": [
+      "Recall the definition of electric flux as the dot product of electric field and area.",
+      "What are the SI units of electric field and area?"
+    ],
+    "step_rubric": [
+      {
+        "step": 1,
+        "description": "Identify units of $E$ and $A$ and multiply them.",
+        "marks": 1
+      }
+    ],
+    "ncert_mapping": {
+      "chapter_name": "Electric Fields and Gauss's Law",
+      "ncert_section": "Electric Flux",
+      "pyq_tag": "CBSE / Board PYQ (Previous Year Question)",
+      "marks": 1
+    },
+    "injected_by": {
+      "faculty_id": "fac_physics_9816010001",
+      "faculty_name": "Dr. Vikram Sharma",
+      "faculty_phone": "98160 10001",
+      "faculty_subject": "Physics",
+      "department": "PHYSICS",
+      "role": "faculty",
+      "timestamp": "2026-11-12T08:01:29.751Z"
+    },
+    "injection_mode": "text",
+    "imported_at": "2026-11-12T08:01:29.751Z"
+  },
+  {
+    "id": "snr_p_inj_1794470489751_830",
+    "grade": "12",
+    "subject": "Physics",
+    "subjectKey": "PHYSICS",
+    "stream": "COMMON_SENIOR",
+    "target_exam": "JEE_MAIN",
+    "chapter_name": "Alternating Current",
+    "chapter": "Alternating Current",
+    "topic": "Alternating Current",
+    "subtopic": "Core Derivation",
+    "curriculum_board": "CBSE",
+    "source_category": "CBSE_PYQ",
+    "question_source": "CBSE_PYQ",
+    "pyq_appearance": "CBSE Board Exam (2025 PYQ)",
+    "difficulty": "MEDIUM",
+    "question_format": "SUBJECTIVE_LONG",
+    "benchmark_time_seconds": 90,
+    "marks_weightage": 3,
+    "question_latex": "An alternating voltage $V = 220\\sqrt{2}\\sin(100\\pi t)$ is applied across a pure capacitor of capacitance $C = 10\\,\\mu\\text{F}$. Find the capacitive reactance $X_C$ and the peak current $I_0$ in the circuit.",
+    "options_latex": [],
+    "options": [],
+    "correct_answer_latex": "$X_C = \\frac{1}{\\omega C} \\approx 318.3\\,\\Omega,\\quad I_0 \\approx 0.98\\,\\text{A}$",
+    "correct_answer": "A",
+    "solution_latex": "Step 1: Angular frequency $\\omega = 2\\pi f = 100\\pi\\,\\text{rad/s}$.\\nStep 2: Capacitive reactance $X_C = \\frac{1}{\\omega C} = \\frac{1}{100\\pi \\times 10\\times10^{-6}} = \\frac{10^3}{\\pi}\\approx 318.3\\,\\Omega$.\\nStep 3: Peak voltage $V_0 = 220\\sqrt{2}\\,\\text{V}$. Peak current $I_0 = \\frac{V_0}{X_C} = \\frac{220\\sqrt{2}}{318.3}\\approx 0.98\\,\\text{A}$.",
+    "socratic_hints": [
+      "What is the relationship between voltage, current, and reactance in an AC circuit?",
+      "How do you compute angular frequency from the given sinusoidal expression?"
+    ],
+    "step_rubric": [
+      {
+        "step": 1,
+        "description": "Compute angular frequency $\\omega$.",
+        "marks": 1
+      },
+      {
+        "step": 2,
+        "description": "Calculate capacitive reactance $X_C$.",
+        "marks": 1
+      },
+      {
+        "step": 3,
+        "description": "Determine peak current $I_0$ using $V_0$ and $X_C$.",
+        "marks": 1
+      }
+    ],
+    "ncert_mapping": {
+      "chapter_name": "Alternating Current",
+      "ncert_section": "Capacitive Reactance",
+      "pyq_tag": "CBSE / Board PYQ (Previous Year Question)",
+      "marks": 3
+    },
+    "injected_by": {
+      "faculty_id": "fac_physics_9816010001",
+      "faculty_name": "Dr. Vikram Sharma",
+      "faculty_phone": "98160 10001",
+      "faculty_subject": "Physics",
+      "department": "PHYSICS",
+      "role": "faculty",
+      "timestamp": "2026-11-12T08:01:29.751Z"
+    },
+    "injection_mode": "text",
+    "imported_at": "2026-11-12T08:01:29.751Z"
+  },
+  {
+    "id": "snr_p_inj_1794470489750_928",
+    "grade": "12",
+    "subject": "Physics",
+    "subjectKey": "PHYSICS",
+    "stream": "COMMON_SENIOR",
+    "target_exam": "JEE_MAIN",
+    "chapter_name": "Electric Fields and Gauss's Law",
+    "chapter": "Electric Fields and Gauss's Law",
+    "topic": "Electric Fields and Gauss's Law",
+    "subtopic": "Core Derivation",
+    "curriculum_board": "CBSE",
+    "source_category": "CBSE_PYQ",
+    "question_source": "CBSE_PYQ",
+    "pyq_appearance": "CBSE Board Exam (2025 PYQ)",
+    "difficulty": "HARD",
+    "question_format": "CASE_STUDY",
+    "benchmark_time_seconds": 180,
+    "marks_weightage": 5,
+    "question_latex": "State Gauss's law in electrostatics. Using this law, derive an expression for the electric field intensity due to an infinitely long straight wire of uniform linear charge density $\\lambda$.",
+    "options_latex": [],
+    "options": [],
+    "correct_answer_latex": "$E = \\frac{\\lambda}{2\\pi \\varepsilon_0 r}$",
+    "correct_answer": "A",
+    "solution_latex": "Step 1: Gauss's law: $\\oint \\vec{E}\\cdot d\\vec{A} = \\frac{q_{enc}}{\\varepsilon_0}$.\\nStep 2: Choose a cylindrical Gaussian surface of radius $r$ and length $L$ coaxial with the wire.\\nStep 3: By cylindrical symmetry, $\\vec{E}$ is radial and constant over the curved surface; flux through the end caps is zero.\\nStep 4: Flux $\\Phi = E\\,(2\\pi r L)$. Enclosed charge $q_{enc}=\\lambda L$.\\nStep 5: Apply Gauss's law: $E(2\\pi r L)=\\frac{\\lambda L}{\\varepsilon_0}\\Rightarrow E=\\frac{\\lambda}{2\\pi \\varepsilon_0 r}$.",
+    "socratic_hints": [
+      "Which symmetry can you exploit for an infinite line charge?",
+      "How does Gauss's law relate flux to enclosed charge?"
+    ],
+    "step_rubric": [
+      {
+        "step": 1,
+        "description": "State Gauss's law.",
+        "marks": 1
+      },
+      {
+        "step": 2,
+        "description": "Select appropriate Gaussian surface.",
+        "marks": 1
+      },
+      {
+        "step": 3,
+        "description": "Use symmetry to simplify flux calculation.",
+        "marks": 1
+      },
+      {
+        "step": 4,
+        "description": "Compute flux and enclosed charge.",
+        "marks": 1
+      },
+      {
+        "step": 5,
+        "description": "Solve for $E$.",
+        "marks": 1
+      }
+    ],
+    "ncert_mapping": {
+      "chapter_name": "Electric Fields and Gauss's Law",
+      "ncert_section": "Gauss's Law",
+      "pyq_tag": "CBSE / Board PYQ (Previous Year Question)",
+      "marks": 5
+    },
+    "injected_by": {
+      "faculty_id": "fac_physics_9816010001",
+      "faculty_name": "Dr. Vikram Sharma",
+      "faculty_phone": "98160 10001",
+      "faculty_subject": "Physics",
+      "department": "PHYSICS",
+      "role": "faculty",
+      "timestamp": "2026-11-12T08:01:29.750Z"
+    },
+    "injection_mode": "text",
+    "imported_at": "2026-11-12T08:01:29.750Z"
+  }
+]
