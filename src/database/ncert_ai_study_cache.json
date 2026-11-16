@@ -4,7 +4,7 @@
     "topic_title": "Chemical Reactions and Chemical Equations",
     "topic_code": "1.1",
     "cached": false,
-    "cached_at": "2026-11-16T23:12:32.306Z",
+    "cached_at": "2026-11-16T23:26:01.194Z",
     "cache_hits": 2,
     "llm_provider": "NCERT Curriculum Engine (Deterministic High-Yield)",
     "token_usage": {
@@ -13,19 +13,19 @@
       "total_tokens": 0
     },
     "summary_notes": {
-      "overview": "A complete chemical equation represents the reactants, products and their physical states symbolically. A chemical reaction has occurred if there is a change in state, change in colour, evolution of a gas, or change in temperature. For example, when zinc granules are added to dilute sulphuric acid in a conical flask, bubbles of hydrogen gas are evolved and the flask becomes warm.",
+      "overview": "A complete chemical equation represents the reactants, products and their physical states symbolically. A chemical reaction has occurred if there is a change in state, change in colour, evolution of a gas, or change in temperature.",
       "core_concepts": [
         {
-          "title": "Foundational Principle",
+          "title": "Core Idea",
           "detail": "A complete chemical equation represents the reactants, products and their physical states symbolically."
         },
         {
-          "title": "Analytical Formulation",
+          "title": "Mathematical Relation",
           "detail": "A chemical reaction has occurred if there is a change in state, change in colour, evolution of a gas, or change in temperature."
         },
         {
-          "title": "Curriculum Importance",
-          "detail": "For example, when zinc granules are added to dilute sulphuric acid in a conical flask, bubbles of hydrogen gas are evolved and the flask becomes warm."
+          "title": "Key Takeaway",
+          "detail": "Always check that physical quantities have matching SI units before performing calculations."
         }
       ],
       "key_definitions": [
@@ -37,32 +37,32 @@
     },
     "bullet_points": {
       "high_yield_takeaways": [
-        "Master the explicit definition of \"Chemical Reactions and Chemical Equations\" verbatim per standard NCERT terminology.",
-        "Ensure dimensional balance and standard SI units across all calculations.",
-        "Graph sketch questions and sign conventions carry dedicated step marks in CBSE board evaluations."
+        "Understand the physical meaning of each variable in $\\text{Zn (s)} + \\text{H}_2\\text{SO}_4\\text{ (aq)} \\longrightarrow \\text{ZnSO}_4\\text{ (aq)} + \\text{H}_2\\text{ (g)} \\uparrow$.",
+        "Keep track of vector directions and coordinate signs (positive vs negative).",
+        "In board exams, writing the governing formula first awards 1 full step mark."
       ],
       "governing_formulas": [
         {
-          "name": "Governing Relation 1",
+          "name": "Formula 1",
           "latex": "$\\text{Zn (s)} + \\text{H}_2\\text{SO}_4\\text{ (aq)} \\longrightarrow \\text{ZnSO}_4\\text{ (aq)} + \\text{H}_2\\text{ (g)} \\uparrow$",
-          "note": "Standard NCERT formulation"
+          "note": "Standard relation for this section"
         }
       ],
       "exam_traps": [
         {
-          "trap": "Confusing scalar addition with vector superposition",
-          "remedy": "Always resolve field or force vectors into perpendicular components before computing net magnitudes."
+          "trap": "Forgetting to convert units to SI (e.g. converting cm to m or $\\mu\\text{C}$ to $\\text{C}$)",
+          "remedy": "Convert all given values into meters ($1\\,\\text{m} = 100\\,\\text{cm}$) and Coulombs ($1\\,\\mu\\text{C} = 10^{-6}\\,\\text{C}$) before multiplying."
         },
         {
-          "trap": "Forgetting Cartesian sign convention in numerical substitution",
-          "remedy": "Establish origin and coordinate axes before applying governing formula."
+          "trap": "Treating vectors as plain scalars",
+          "remedy": "Resolve quantities into $x$ and $y$ components and add vectorially."
         }
       ]
     },
     "quick_quiz": [
       {
         "id": "q_1.1_1",
-        "question": "According to the NCERT curriculum for \"Chemical Reactions and Chemical Equations\", which statement is conceptually accurate?",
+        "question": "Which of the following statements about \"Chemical Reactions and Chemical Equations\" is correct?",
         "options": [
           {
             "key": "A",
@@ -70,47 +70,47 @@
           },
           {
             "key": "B",
-            "text": "The phenomenon violates universal conservation principles in closed systems."
+            "text": "It completely violates energy and charge conservation principles."
           },
           {
             "key": "C",
-            "text": "It is independent of physical boundary conditions and material permittivity."
+            "text": "The value is always zero regardless of experimental setup."
           },
           {
             "key": "D",
-            "text": "It can only be defined for macroscopic continuous media, failing at atomic scales."
+            "text": "It only applies to uncharged neutral matter at absolute zero."
           }
         ],
         "correct_answer": "A",
-        "explanation": "Option A is correct: \"A complete chemical equation represents the reactants, products and their physical states symbolically.\". This is explicitly highlighted in the NCERT syllabus."
+        "explanation": "Option A is correct: \"A complete chemical equation represents the reactants, products and their physical states symbolically.\"."
       },
       {
         "id": "q_1.1_2",
-        "question": "What is the primary examination pitfall students encounter when solving problems on \"Chemical Reactions and Chemical Equations\"?",
+        "question": "What is the most common mistake students make when solving numericals for \"Chemical Reactions and Chemical Equations\"?",
         "options": [
           {
             "key": "A",
-            "text": "Misidentifying vector orientations and skipping Cartesian sign conventions."
+            "text": "Forgetting Cartesian signs and unit conversions (e.g., cm to m)."
           },
           {
             "key": "B",
-            "text": "Applying dimensional analysis to check formula validity."
+            "text": "Writing down the governing formula and checking SI units."
           },
           {
             "key": "C",
-            "text": "Using standard SI units for final calculations."
+            "text": "Drawing a labelled diagram to identify vector directions."
           },
           {
             "key": "D",
-            "text": "Drawing a labelled schematic before substituting values."
+            "text": "Stating the final answer with proper physical units."
           }
         ],
         "correct_answer": "A",
-        "explanation": "Failing to respect vector directions and coordinate sign conventions is the most frequent deduction in board marking schemes."
+        "explanation": "Failing to convert prefixes like cm to m or forgetting positive/negative signs is the most common student error."
       },
       {
         "id": "q_1.1_3",
-        "question": "Which governing equation or relationship corresponds to \"Chemical Reactions and Chemical Equations\"?",
+        "question": "Which governing equation applies to \"Chemical Reactions and Chemical Equations\"?",
         "options": [
           {
             "key": "A",
@@ -118,19 +118,19 @@
           },
           {
             "key": "B",
-            "text": "$PV = nRT^2$"
+            "text": "$PV = nRT^3$"
           },
           {
             "key": "C",
-            "text": "$\\Delta x \\cdot \\Delta p < \\frac{h}{4\\pi}$"
+            "text": "$\\lambda = \\frac{h}{mv^2}$"
           },
           {
             "key": "D",
-            "text": "$v = u - 2at^2$"
+            "text": "$v^2 = u^2 - 4as$"
           }
         ],
         "correct_answer": "A",
-        "explanation": "The valid NCERT formulation for this concept is $\\text{Zn (s)} + \\text{H}_2\\text{SO}_4\\text{ (aq)} \\longrightarrow \\text{ZnSO}_4\\text{ (aq)} + \\text{H}_2\\text{ (g)} \\uparrow$."
+        "explanation": "Option A ($\\text{Zn (s)} + \\text{H}_2\\text{SO}_4\\text{ (aq)} \\longrightarrow \\text{ZnSO}_4\\text{ (aq)} + \\text{H}_2\\text{ (g)} \\uparrow$) is the correct formula for this topic."
       }
     ]
   }

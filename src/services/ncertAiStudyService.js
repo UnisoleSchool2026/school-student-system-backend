@@ -147,94 +147,116 @@ async function callGemini({ apiKey, systemPrompt, userPrompt }) {
 
 /**
  * Deterministic pedagogical fallback ensuring 100% offline uptime
+ * Formatted with simple student-friendly wording and clean LaTeX notation
  */
 function buildFallbackStudyAid(topic) {
   const code = topic.code || '';
-  const title = topic.title || 'NCERT Section';
+  const title = topic.title || 'Curriculum Section';
   const text = topic.content_text || '';
 
   // Extract key sentences
   const sentences = text.split(/(?<=[.?!])\s+/).filter(s => s.trim().length > 10);
-  const core1 = sentences[0] || `${title} is a fundamental concept in the canonical NCERT syllabus.`;
-  const core2 = sentences[1] || 'It establishes foundational relationships evaluated in board and national entrance exams.';
-  const core3 = sentences[2] || 'Precise statement of laws and adherence to SI units are strictly required.';
+  const cleanSentences = sentences.map(s => s.trim().replace(/^[\d.]+\s*/, ''));
+
+  // Simple conceptual summary
+  const simpleOverview = cleanSentences.length > 0
+    ? cleanSentences.slice(0, 2).join(' ')
+    : `In this section, you learn the core principles of $${title}$. Understanding how variables interact is essential for solving numericals and conceptual board questions.`;
 
   // Extract LaTeX equations if present
   const mathMatches = text.match(/\$[^$]+\$/g) || [];
   const formulas = mathMatches.slice(0, 4).map((m, idx) => ({
-    name: `Governing Relation ${idx + 1}`,
+    name: `Formula ${idx + 1}`,
     latex: m,
-    note: 'Standard NCERT formulation'
+    note: 'Standard relation for this section'
   }));
 
   if (formulas.length === 0) {
     formulas.push({
-      name: 'Governing Principle',
-      latex: '$E \\propto \\frac{1}{r^2}$ or $\\sum F = ma$',
-      note: 'Foundational formulation for this curriculum section'
+      name: 'Governing Formula',
+      latex: '$q = ne$',
+      note: 'where $n$ is an integer and $e = 1.602 \\times 10^{-19}\\,\\text{C}$'
     });
   }
 
   return {
     summary_notes: {
-      overview: sentences.slice(0, 3).join(' ') || `${title} introduces core theoretical definitions and relationships.`,
+      overview: simpleOverview,
       core_concepts: [
-        { title: 'Foundational Principle', detail: core1 },
-        { title: 'Analytical Formulation', detail: core2 },
-        { title: 'Curriculum Importance', detail: core3 }
+        {
+          title: 'Core Idea',
+          detail: cleanSentences[0] || `The fundamental idea behind $${title}$ describes how quantities behave under standard conditions.`
+        },
+        {
+          title: 'Mathematical Relation',
+          detail: cleanSentences[1] || `The governing relation uses ${formulas[0].latex} to connect physical properties.`
+        },
+        {
+          title: 'Key Takeaway',
+          detail: 'Always check that physical quantities have matching SI units before performing calculations.'
+        }
       ],
       key_definitions: [
-        { term: title, definition: core1 }
+        {
+          term: title,
+          definition: cleanSentences[0] || `The primary concept describing physical interactions in this section.`
+        }
       ]
     },
     bullet_points: {
       high_yield_takeaways: [
-        `Master the explicit definition of "${title}" verbatim per standard NCERT terminology.`,
-        'Ensure dimensional balance and standard SI units across all calculations.',
-        'Graph sketch questions and sign conventions carry dedicated step marks in CBSE board evaluations.'
+        `Understand the physical meaning of each variable in ${formulas[0].latex}.`,
+        'Keep track of vector directions and coordinate signs (positive vs negative).',
+        'In board exams, writing the governing formula first awards 1 full step mark.'
       ],
       governing_formulas: formulas,
       exam_traps: [
-        { trap: 'Confusing scalar addition with vector superposition', remedy: 'Always resolve field or force vectors into perpendicular components before computing net magnitudes.' },
-        { trap: 'Forgetting Cartesian sign convention in numerical substitution', remedy: 'Establish origin and coordinate axes before applying governing formula.' }
+        {
+          trap: 'Forgetting to convert units to SI (e.g. converting cm to m or $\\mu\\text{C}$ to $\\text{C}$)',
+          remedy: 'Convert all given values into meters ($1\\,\\text{m} = 100\\,\\text{cm}$) and Coulombs ($1\\,\\mu\\text{C} = 10^{-6}\\,\\text{C}$) before multiplying.'
+        },
+        {
+          trap: 'Treating vectors as plain scalars',
+          remedy: 'Resolve quantities into $x$ and $y$ components and add vectorially.'
+        }
       ]
     },
     quick_quiz: [
       {
         id: `q_${code}_1`,
-        question: `According to the NCERT curriculum for "${title}", which statement is conceptually accurate?`,
+        question: `Which of the following statements about "${title}" is correct?`,
         options: [
-          { key: 'A', text: core1 },
-          { key: 'B', text: 'The phenomenon violates universal conservation principles in closed systems.' },
-          { key: 'C', text: 'It is independent of physical boundary conditions and material permittivity.' },
-          { key: 'D', text: 'It can only be defined for macroscopic continuous media, failing at atomic scales.' }
+          { key: 'A', text: cleanSentences[0] || `The quantity follows conservation rules in closed systems.` },
+          { key: 'B', text: 'It completely violates energy and charge conservation principles.' },
+          { key: 'C', text: 'The value is always zero regardless of experimental setup.' },
+          { key: 'D', text: 'It only applies to uncharged neutral matter at absolute zero.' }
         ],
         correct_answer: 'A',
-        explanation: `Option A is correct: "${core1}". This is explicitly highlighted in the NCERT syllabus.`
+        explanation: `Option A is correct: "${cleanSentences[0] || 'The quantity follows conservation rules in closed systems.'}".`
       },
       {
         id: `q_${code}_2`,
-        question: `What is the primary examination pitfall students encounter when solving problems on "${title}"?`,
+        question: `What is the most common mistake students make when solving numericals for "${title}"?`,
         options: [
-          { key: 'A', text: 'Misidentifying vector orientations and skipping Cartesian sign conventions.' },
-          { key: 'B', text: 'Applying dimensional analysis to check formula validity.' },
-          { key: 'C', text: 'Using standard SI units for final calculations.' },
-          { key: 'D', text: 'Drawing a labelled schematic before substituting values.' }
+          { key: 'A', text: 'Forgetting Cartesian signs and unit conversions (e.g., cm to m).' },
+          { key: 'B', text: 'Writing down the governing formula and checking SI units.' },
+          { key: 'C', text: 'Drawing a labelled diagram to identify vector directions.' },
+          { key: 'D', text: 'Stating the final answer with proper physical units.' }
         ],
         correct_answer: 'A',
-        explanation: 'Failing to respect vector directions and coordinate sign conventions is the most frequent deduction in board marking schemes.'
+        explanation: 'Failing to convert prefixes like cm to m or forgetting positive/negative signs is the most common student error.'
       },
       {
         id: `q_${code}_3`,
-        question: `Which governing equation or relationship corresponds to "${title}"?`,
+        question: `Which governing equation applies to "${title}"?`,
         options: [
           { key: 'A', text: formulas[0].latex },
-          { key: 'B', text: '$PV = nRT^2$' },
-          { key: 'C', text: '$\\Delta x \\cdot \\Delta p < \\frac{h}{4\\pi}$' },
-          { key: 'D', text: '$v = u - 2at^2$' }
+          { key: 'B', text: '$PV = nRT^3$' },
+          { key: 'C', text: '$\\lambda = \\frac{h}{mv^2}$' },
+          { key: 'D', text: '$v^2 = u^2 - 4as$' }
         ],
         correct_answer: 'A',
-        explanation: `The valid NCERT formulation for this concept is ${formulas[0].latex}.`
+        explanation: `Option A (${formulas[0].latex}) is the correct formula for this topic.`
       }
     ]
   };
@@ -247,48 +269,49 @@ async function generateAiStudyPayload(topic) {
   const groqKey = process.env.GROQ_API_KEY;
   const geminiKey = process.env.GEMINI_API_KEY;
 
-  const systemPrompt = `You are an elite NCERT Academic Pedagogy & Curriculum Expert.
-Your task is to analyze the provided extracted textbook text for a specific NCERT topic, and produce a high-yield study aid package containing:
-1. short notes & executive summary
-2. important bullet points (high-yield exam takeaways, key formulas with LaTeX, common traps)
-3. a quick quiz (3 high-quality multiple choice questions with answer keys and explanations)
+  const systemPrompt = `You are an elite tutor who explains high school science concepts simply and clearly.
+Analyze the provided textbook topic and produce a simple, clear, student-friendly study guide in valid JSON format.
 
-All mathematical expressions MUST be enclosed in valid LaTeX ($...$ or $$...$$).
-Output strictly valid JSON matching this schema:
+CRITICAL FORMATTING GUIDELINES:
+1. SIMPLE WORDING: Use simple, plain, conversational English that is very easy for a student to understand. Avoid dense academic jargon and overly long sentences.
+2. CLEAN LATEX: Format all mathematical formulas, physical quantities, variables, numbers with units, and equations in clean standard LaTeX enclosed in single dollar signs (e.g. $q = ne$, $F = 10\\,\\text{N}$, $e = 1.6 \\times 10^{-19}\\,\\text{C}$, $\\frac{1}{4\\pi\\varepsilon_0}$).
+3. NO "ACCORDING TO NCERT": In the quiz questions, NEVER start any question with "According to NCERT...", "According to the NCERT curriculum...", "According to the textbook...", or "As per NCERT...". Write direct, engaging questions like "Which of the following is true regarding...", "What happens when...", or "What is the primary governing formula for...".
+
+Output strictly valid JSON with this exact schema:
 {
   "summary_notes": {
-    "overview": "Clear 2-3 sentence conceptual overview",
+    "overview": "Simple 2-sentence summary in plain English with clean LaTeX",
     "core_concepts": [
-      { "title": "Concept Name", "detail": "Detailed explanation with LaTeX formulas" }
+      { "title": "Concept Name", "detail": "Simple, intuitive explanation using clean LaTeX like $F = ma$" }
     ],
     "key_definitions": [
-      { "term": "Term", "definition": "Exact definition" }
+      { "term": "Term", "definition": "Clear, simple definition" }
     ]
   },
   "bullet_points": {
     "high_yield_takeaways": [
-      "Key point 1",
-      "Key point 2"
+      "Short, simple bullet point with LaTeX if needed",
+      "Short, simple bullet point with LaTeX if needed"
     ],
     "governing_formulas": [
-      { "name": "Formula Name", "latex": "$equation$", "note": "Where variables represent..." }
+      { "name": "Formula Name", "latex": "$clean_equation$", "note": "Simple note on what variables mean" }
     ],
     "exam_traps": [
-      { "trap": "Common student error", "remedy": "How to avoid it" }
+      { "trap": "Common mistake in simple words", "remedy": "Simple advice on how to avoid it" }
     ]
   },
   "quick_quiz": [
     {
       "id": "q1",
-      "question": "Question text with LaTeX?",
+      "question": "Direct question without saying 'According to NCERT'?",
       "options": [
-        { "key": "A", "text": "Option A" },
-        { "key": "B", "text": "Option B" },
-        { "key": "C", "text": "Option C" },
-        { "key": "D", "text": "Option D" }
+        { "key": "A", "text": "Option A with clean LaTeX" },
+        { "key": "B", "text": "Option B with clean LaTeX" },
+        { "key": "C", "text": "Option C with clean LaTeX" },
+        { "key": "D", "text": "Option D with clean LaTeX" }
       ],
       "correct_answer": "A",
-      "explanation": "Why A is correct and why other options are incorrect."
+      "explanation": "Simple explanation in plain English."
     }
   ]
 }`;
@@ -408,3 +431,4 @@ module.exports = {
   saveCacheToDisk,
   buildFallbackStudyAid
 };
+
