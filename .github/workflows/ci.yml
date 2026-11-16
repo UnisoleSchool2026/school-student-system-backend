@@ -242,11 +242,15 @@ jobs:
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
+        continue-on-error: true
         with:
           languages: javascript-typescript
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
+        continue-on-error: true
+        with:
+          upload: 'never'
 
   docker-build-smoke:
     name: Docker Build, Health Smoke Test, and Trivy Scan

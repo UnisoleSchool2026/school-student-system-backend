@@ -626,6 +626,86 @@ async function generateSmartboardTeachingPlan({
     s3Spoken = 'Aur final result mein image distance aur magnification ka sign dekhkar image real aur inverted confirm hoti hai.';
     diagSpoken = 'Pehle left board par principal axis aur convex lens ke ray diagram ko dhyan se dekho.';
     defaultHinglish = `${diagSpoken} ${s1Spoken} ${s2Spoken} ${s3Spoken}`;
+  } else if (textCorpus.match(/alternating|ac circuit|capacitive reactance|inductive reactance|phasor|pure capacitor|peak current|rms current|lcr\b/)) {
+    defaultDiagType = 'ac_circuit';
+    defaultTitle = 'AC Circuit & Phasor Diagram • Pure Capacitive Load';
+    defaultTip = 'In a pure capacitor, current LEADS voltage by 90° (π/2 rad)! Average power consumed over a full cycle is strictly ZERO!';
+    s1Title = 'AC Voltage & Capacitive Reactance Definition';
+    s1Formula = '• Applied Voltage: V(t) = V₀ · sin(ωt) = 220√2 · sin(100π t)\n• Angular Frequency: ω = 2π f,  V₀ = 220√2 V\n• Capacitive Reactance: X_C = 1 / (ω · C)';
+    s1Exp = 'A pure capacitor opposes alternating current through frequency-dependent capacitive reactance.';
+    s1Spoken = 'Dekho beta, pehle AC voltage formula aur capacitive reactance X_C = 1 / (omega C) note karte hain.';
+
+    s2Title = 'Reactance & Peak Current Derivation';
+    s2Formula = cleanS || '1) Calculate Reactance: X_C = 1 / (ω·C) = 1 / [100π × (10 × 10⁻⁶)] = 1000 / π ≈ 318.3 Ω\n2) Peak Current: I₀ = V₀ / X_C = (220√2) / 318.3 ≈ 0.98 A\n3) Phase Relation: Current leads voltage by π/2 (90°)';
+    s2Exp = 'Ohm\'s Law analog in AC circuits yields peak current amplitude from peak voltage and capacitive reactance.';
+    s2Spoken = 'Ab angular frequency omega = 100 pi substitute karke reactance 318.3 ohm aur peak current I0 = 0.98 ampere evaluate karte hain.';
+
+    s3Title = 'Final Evaluated AC Parameters & Takeaway';
+    s3Formula = '• Capacitive Reactance: X_C = 1000/π Ω ≈ 318.3 Ω\n• Peak Current: I₀ ≈ 0.98 A (RMS Current I_rms = 0.69 A)\n• Phase Lead: Current leads voltage by 90° (φ = +π/2)\n• Average Power: P_avg = V_rms · I_rms · cos(90°) = 0 W';
+    s3Exp = 'Pure reactive circuit elements consume ZERO net active power over a full cycle (cos 90° = 0).';
+    s3Spoken = 'Aur pure capacitor mein current voltage se 90 degree aage lead karta hai aur net power loss zero hota hai!';
+    diagSpoken = 'Pehle left side board par AC capacitor circuit aur phasor diagram ko dhyan se observe karo.';
+    defaultHinglish = `${diagSpoken} ${s1Spoken} ${s2Spoken} ${s3Spoken}`;
+  } else if (textCorpus.match(/\b(gauss|gaussian surface|linear charge density|straight wire|infinite wire|cylinder|curved surface flux)\b/)) {
+    defaultDiagType = 'gauss';
+    defaultTitle = "Gauss's Law • Cylindrical Gaussian Surface & Wire (λ)";
+    defaultTip = 'By cylindrical symmetry, electric field E is strictly radial. End-cap flux is zero because E is parallel to cap faces!';
+    s1Title = 'Governing Electrostatic Relations & Symmetry';
+    s1Formula = '• Gauss Law: Φ = ∮ E · dA = q_enclosed / ε₀\n• Linear Charge Density: λ = q / L ⇒ q_enclosed = λ · L\n• Cylindrical Symmetry: E is radial and perpendicular to wire axis';
+    s1Exp = 'Choose a coaxial cylindrical Gaussian surface of radius r and length L centered on the infinitely long charged wire.';
+    s1Spoken = 'Dekho beta, pehle left board par infinitely long charged wire aur cylindrical Gaussian surface ka setup note karo.';
+
+    s2Title = 'Formula Substitution & Mathematical Working';
+    s2Formula = cleanS || '1) Curved Surface Area: A = 2π·r·L\n2) Total Flux: Φ = E · (2π·r·L) + 0 (end caps have zero flux)\n3) Apply Gauss\'s Law: E · (2π·r·L) = (λ · L) / ε₀ ⇒ E = λ / (2π · ε₀ · r)';
+    s2Exp = 'Flux passes exclusively through the curved cylindrical surface. Equating enclosed charge λL over ε₀ isolates the radial field.';
+    s2Spoken = 'Ab Gauss Law lagakar curved area 2 pi r L se divide karte hain aur electric field formula derive ho jata hai.';
+
+    s3Title = 'Verified Final Answer & Physical Invariant';
+    s3Formula = '• Electric Field: E = λ / (2π · ε₀ · r) = (1 / 4πε₀) · (2λ / r)\n• Inverse Distance Dependency: E ∝ 1 / r\n• Direction: Radially outward if λ > 0, radially inward if λ < 0';
+    s3Exp = 'The electric field falls off as 1/r (compared to 1/r² for a point charge). This is verified by CBSE standard derivation rubrics.';
+    s3Spoken = 'Aur final result mein electric field E = lambda / (2 pi epsilon_0 r) mil jata hai!';
+    diagSpoken = 'Pehle left board par cylindrical Gaussian surface aur radial field vectors E ko note karo.';
+    defaultHinglish = `${diagSpoken} ${s1Spoken} ${s2Spoken} ${s3Spoken}`;
+  } else if (textCorpus.match(/\b(dipole|dipole moment|torque on dipole)\b/)) {
+    defaultDiagType = 'dipole';
+    defaultTitle = 'Electric Dipole • Torque & Potential Energy Model';
+    defaultTip = 'Torque aligns dipole parallel to field (stable equilibrium at θ = 0°). Work done W = pE(cos θ₁ - cos θ₂)!';
+    s1Title = 'Governing Dipole Relations';
+    s1Formula = '• Dipole Moment: p = q · 2a\n• Torque on Dipole: τ = p × E = pE · sin θ\n• Potential Energy: U(θ) = -p · E = -pE · cos θ\n• Work Rotating Dipole: W = pE(cos θ₁ - cos θ₂)';
+    s1Exp = 'Equal and opposite forces on charges produce a net couple torque τ = p × E without translational net force in uniform field.';
+    s1Spoken = 'Dekho beta, pehle uniform electric field mein dipole par lagne wale equal and opposite forces aur torque note karo.';
+
+    s2Title = 'Torque & Work Done Working';
+    s2Formula = cleanS || '1) Torque couple: τ = q·E · (2a·sin θ) = p·E·sin θ\n2) Work done: dW = τ · dθ = p·E·sin θ · dθ\n3) Integrate: W = ∫ p·E·sin θ dθ = -p·E·cos θ |[θ₁ to θ₂] = pE(cos θ₁ - cos θ₂)';
+    s2Exp = 'Integrating infinitesimal work done against the restoring electrostatic torque yields the change in potential energy.';
+    s2Spoken = 'Ab torque equation integrate karke initial aur final angles substitute karte hain.';
+
+    s3Title = 'Final Potential Energy & Stability Takeaway';
+    s3Formula = '• Stable Equilibrium (θ = 0°): τ = 0, U_min = -pE\n• Unstable Equilibrium (θ = 180°): τ = 0, U_max = +pE\n• Zero Energy Position (θ = 90°): U = 0';
+    s3Exp = 'Positive external work is required to rotate a dipole away from stable alignment with the electric field vector.';
+    s3Spoken = 'Aur final verified takeaway: dipole theta = 0 degree par minimum energy aur stable equilibrium mein hota hai!';
+    diagSpoken = 'Pehle left board par uniform electric field aur dipole charges -q, +q ki geometry note karo.';
+    defaultHinglish = `${diagSpoken} ${s1Spoken} ${s2Spoken} ${s3Spoken}`;
+  } else if (textCorpus.match(/\b(capacitor|capacitance|dielectric|parallel plate|stored energy)\b/)) {
+    defaultDiagType = 'capacitor';
+    defaultTitle = 'Parallel Plate Capacitor • Dielectric & Stored Energy';
+    defaultTip = 'Inserting dielectric of constant K increases capacitance by factor K: C = K · C₀!';
+    s1Title = 'Capacitor Governing Principles';
+    s1Formula = '• Capacitance: C = (ε₀ · A) / d\n• With Dielectric: C = (K · ε₀ · A) / d\n• Stored Energy: U = ½ C·V² = Q² / (2C) = ½ Q·V';
+    s1Exp = 'Electric field inside uniform plates is E = σ / ε₀ = V / d. Surface charge Q = C · V.';
+    s1Spoken = 'Dekho beta, parallel plate capacitor aur dielectric constant K ke formula note karte hain.';
+
+    s2Title = 'Energy & Charge Working';
+    s2Formula = cleanS || '1) Electric Field: E = V / d\n2) Energy Density: u = ½ ε₀ · E²\n3) Total Stored Energy: U = u · (A · d) = ½ (ε₀·A / d) · V² = ½ C·V²';
+    s2Exp = 'Evaluate dielectric constant effect or energy change under constant voltage vs constant charge conditions.';
+    s2Spoken = 'Ab plates ke beech energy density integrate karke total electrostatic energy derive karte hain.';
+
+    s3Title = 'Final Evaluated Energy & Takeaway';
+    s3Formula = '• Total Stored Electrostatic Energy: U = ½ C·V²\n• Energy Density: u = ½ ε₀ · E² (J/m³)\n• Consistency: Verified under CBSE SI Units';
+    s3Exp = 'Energy is physically stored in the electrostatic field established between the conductor plates.';
+    s3Spoken = 'Aur final result confirm karta hai ki energy electric field mein store hoti hai!';
+    diagSpoken = 'Pehle left board par capacitor plates aur dielectric slab ko note karo.';
+    defaultHinglish = `${diagSpoken} ${s1Spoken} ${s2Spoken} ${s3Spoken}`;
   } else if (textCorpus.match(/dipole|electrostatic|coulomb|gauss|electric flux|electric field|point charge|capacit/)) {
     defaultDiagType = 'concept';
     defaultTitle = 'Electrostatics & Field Geometry Model';
