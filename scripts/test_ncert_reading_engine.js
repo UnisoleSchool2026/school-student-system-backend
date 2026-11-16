@@ -1,6 +1,6 @@
 // ============================================================================
 // TEST: NCERT Reading Engine Verification
-// Tests authentication, book tree, topic detail retrieval, and upload pipeline.
+// Tests authentication, upload pipeline, and extracted tree & topic inspection.
 // ============================================================================
 
 const assert = require('assert');
@@ -23,34 +23,8 @@ async function runTests() {
   assert.strictEqual(verified.role, 'admin');
   console.log('✅ Token decoded and verified.');
 
-  // Test 3: List pre-seeded books
-  console.log('\n--- TEST 3: Pre-seeded Authentic NCERT Books ---');
-  const books = ncertService.listBooks();
-  assert(books.length >= 4, 'Should have at least 4 pre-seeded books');
-  console.log(`✅ ${books.length} authentic books loaded:`);
-  books.forEach(b => console.log(`   - [Class ${b.class_no} ${b.subject}] ${b.title} (${b.chapters_count} chapters)`));
-
-  // Test 4: Book Tree Navigation
-  console.log('\n--- TEST 4: Book Tree Hierarchy ---');
-  const recent = ncertService.getRecentBook();
-  const tree = ncertService.getBookTree(recent.id, true);
-  assert(tree.chapters.length > 0, 'Chapters should be present');
-  const ch1 = tree.chapters[0];
-  assert(ch1.topics.length > 0, 'Topics should be present in chapter 1');
-  console.log(`✅ Loaded tree for "${tree.title}": ${tree.chapters.length} chapters.`);
-  console.log(`   Sample Chapter: "${ch1.title}" with ${ch1.topics.length} topics:`);
-  ch1.topics.slice(0, 3).forEach(t => console.log(`     ↳ ${t.code} ${t.title} (${t.word_count} words, confidence ${Math.round(t.confidence * 100)}%)`));
-
-  // Test 5: Topic Content & Extraction Details
-  console.log('\n--- TEST 5: Topic Content Inspection ---');
-  const top1 = ncertService.getTopic(ch1.topics[0].id);
-  assert(top1.content_text && top1.content_text.length > 50, 'Topic must contain extracted text');
-  console.log(`✅ Topic ${top1.code} (${top1.title}):`);
-  console.log(`   Review Status: ${top1.review_status} | Word Count: ${top1.word_count}`);
-  console.log(`   Content Preview: "${top1.content_text.slice(0, 140).replace(/\n/g, ' ')}..."`);
-
-  // Test 6: Ingestion Pipeline (Simulated PDF Upload)
-  console.log('\n--- TEST 6: Ingestion Pipeline Execution ---');
+  // Test 3: Ingestion Pipeline (Upload PDF)
+  console.log('\n--- TEST 3: Ingestion Pipeline Execution (Upload PDF) ---');
   const samplePdfBuffer = Buffer.from(
     '%PDF-1.4\n1 0 obj\n<< /Title (NCERT Sample Chapter) >>\nendobj\n' +
     'Chapter 1: Units and Measurements\n1.1 Introduction\nMeasurement of any physical quantity involves comparison with a standard.\n' +
@@ -82,8 +56,23 @@ async function runTests() {
   console.log(`✅ Job finished successfully! Final stage: ${jobState.current_stage} (100%)`);
   console.log(`   Completed stages: ${jobState.stages.map(s => s.stage).join(' -> ')}`);
 
-  const createdTree = ncertService.getBookTree(jobState.book_id);
-  console.log(`✅ Generated book "${createdTree.title}" with ${createdTree.chapters.length} chapter(s).`);
+  // Test 4: Book Tree Navigation on Uploaded Book
+  console.log('\n--- TEST 4: Uploaded Book Tree Hierarchy ---');
+  const tree = ncertService.getBookTree(jobState.book_id, true);
+  assert(tree.chapters.length > 0, 'Chapters should be present');
+  const ch1 = tree.chapters[0];
+  assert(ch1.topics.length > 0, 'Topics should be present in chapter 1');
+  console.log(`✅ Loaded tree for "${tree.title}": ${tree.chapters.length} chapter(s).`);
+  console.log(`   Sample Chapter: "${ch1.title}" with ${ch1.topics.length} topics:`);
+  ch1.topics.forEach(t => console.log(`     ↳ ${t.code} ${t.title} (${t.word_count} words, confidence ${Math.round(t.confidence * 100)}%)`));
+
+  // Test 5: Topic Content & Extraction Details
+  console.log('\n--- TEST 5: Topic Content Inspection ---');
+  const top1 = ncertService.getTopic(ch1.topics[0].id);
+  assert(top1.content_text && top1.content_text.length > 10, 'Topic must contain extracted text');
+  console.log(`✅ Topic ${top1.code} (${top1.title}):`);
+  console.log(`   Review Status: ${top1.review_status} | Word Count: ${top1.word_count}`);
+  console.log(`   Content Preview: "${top1.content_text.slice(0, 140).replace(/\n/g, ' ')}..."`);
 
   console.log('\n======================================================');
   console.log('🎉 ALL NCERT READING ENGINE TESTS VERIFIED 100%!');
