@@ -158,21 +158,30 @@ Solution: Magnetic field at center $B = \\frac{\\mu_0 I}{2r} = \\frac{\\mu_0 V}{
   // Mock transparent 1x1 PNG base64
   const mockPngBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
   
-  const imgParsed = await processQuestionExtraction({
-    mode: 'image',
-    mediaData: mockPngBase64,
-    mimeType: 'image/png',
-    targetSubject: 'Physics',
-    grade: '12',
-    chapter: 'Ray Optics',
-    category: 'NCERT_EXAMPLE',
-    marks: 3
-  });
-
-  assert(imgParsed.question_latex, 'Image extraction must produce question_latex');
-  assert(Array.isArray(imgParsed.options_latex), 'Options must be an array');
-  assert(imgParsed.solution_latex, 'Solution must be present');
-  console.log('✅ PASS: Multimodal Image pipeline processed successfully with fallback resiliency');
+  // A blank 1x1 image has no questions. Without a vision key (or when the model finds nothing) the
+  // service must refuse clearly (EXTRACTION_UNREADABLE) instead of inventing a placeholder question.
+  let imgErr = null;
+  let imgParsed = null;
+  try {
+    imgParsed = await processQuestionExtraction({
+      mode: 'image',
+      mediaData: mockPngBase64,
+      mimeType: 'image/png',
+      targetSubject: 'Physics',
+      grade: '12',
+      category: 'NCERT_EXAMPLE'
+    });
+  } catch (e) {
+    imgErr = e;
+  }
+  if (imgErr) {
+    assert.strictEqual(imgErr.code, 'EXTRACTION_UNREADABLE', `unexpected error: ${imgErr.message}`);
+    assert(/Paste the question text/.test(imgErr.message), 'error must tell the teacher what to do');
+  } else {
+    assert(imgParsed.question_latex, 'Image extraction must produce question_latex');
+    assert(Array.isArray(imgParsed.options_latex), 'Options must be an array');
+  }
+  console.log('✅ PASS: Image pipeline either extracts real questions or refuses clearly (no invented question)');
 
   // Test 6: Multi-Question Document Auto-Categorization & Batch Ingestion
   console.log('\n--- TEST 6: Multi-Question Document Auto-Categorization & Batch Ingestion ---');

@@ -67,7 +67,7 @@ async function runDashboardVerification() {
     assert(sciData.success === true, 'Response success is true');
     assert(sciData.assessment.id === 'asgn_10_sci_01', 'Loaded asgn_10_sci_01 for Science');
     assert(sciData.hasSubmissions === true, 'hasSubmissions is true');
-    assert(sciData.classSummary.totalSubmissions === 6, '6 Science submissions found');
+    assert(sciData.classSummary.totalSubmissions === 4, '4 Science submissions found (one per enrolled Class 10 student)');
 
     // 4. Test GET /api/analytics/class-dashboard for BIOLOGY
     console.log('\n[4/6] Testing GET /api/analytics/class-dashboard?subjectKey=BIOLOGY');

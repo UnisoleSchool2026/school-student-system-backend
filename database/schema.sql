@@ -8,6 +8,9 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Clean existing tables if needed
+DROP TABLE IF EXISTS dpp_attempts CASCADE;
+DROP TABLE IF EXISTS curriculum_content CASCADE;
+DROP TABLE IF EXISTS schools CASCADE;
 DROP TABLE IF EXISTS weekly_smart_reports CASCADE;
 DROP TABLE IF EXISTS handwritten_evaluations CASCADE;
 DROP TABLE IF EXISTS student_question_telemetry CASCADE;
@@ -223,3 +226,86 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER update_users_timestamp
 BEFORE UPDATE ON users
 FOR EACH ROW EXECUTE FUNCTION update_timestamp();
+
+-- ============================================================================
+-- MULTI-TENANT DUAL-MODE ARCHITECTURE (Board vs Competitive) - 2026-11-16
+-- Source of truth for profiles: src/registry/tenants/*.json
+-- Canonical content mirrors src/services/canonicalContentService.js
+-- ============================================================================
+
+-- 13. SCHOOL TENANTS (one row per school / franchise profile)
+CREATE TABLE schools (
+    id VARCHAR(64) PRIMARY KEY,                -- e.g. 'sch_unisole_001'
+    name VARCHAR(255) NOT NULL,
+    short_name VARCHAR(32),
+    active_modes VARCHAR(32)[] NOT NULL,       -- ['BOARD'], ['COMPETITIVE'] or both
+    default_mode VARCHAR(32) NOT NULL,
+    profile JSONB NOT NULL,                    -- full tenant profile (boardConfig, competitiveConfig, features)
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    CHECK (default_mode = ANY(active_modes))
+);
+
+CREATE TRIGGER update_schools_timestamp
+BEFORE UPDATE ON schools
+FOR EACH ROW EXECUTE FUNCTION update_timestamp();
+
+-- 14. CANONICAL CURRICULUM CONTENT (shared by Board and Competitive modes)
+CREATE TABLE curriculum_content (
+    id VARCHAR(64) PRIMARY KEY,
+    school_id VARCHAR(64) REFERENCES schools(id) ON DELETE CASCADE, -- NULL = shared library content
+    subject VARCHAR(32) NOT NULL,
+    subject_key VARCHAR(32) NOT NULL,              -- PHYSICS, CLASS10_MATHEMATICS, ...
+    grade VARCHAR(4) NOT NULL,
+    chapter_code VARCHAR(64) NOT NULL,
+    chapter_name VARCHAR(255),
+    topic VARCHAR(255) NOT NULL,
+
+    -- Dual-mode classification tags
+    target_modes VARCHAR(32)[] NOT NULL,           -- ['BOARD'], ['COMPETITIVE'], or ['BOARD','COMPETITIVE']
+    board_targets VARCHAR(32)[] DEFAULT '{}',      -- ['CBSE','HP_BOARD','ICSE']
+    competitive_targets VARCHAR(32)[] DEFAULT '{}',-- ['JEE_MAIN','JEE_ADVANCED','NEET']
+    competitive_source VARCHAR(32),                -- 'NATIVE' | 'DERIVED_BOARD_MCQ'
+
+    -- Content bucket
+    content_type VARCHAR(32) NOT NULL CHECK (content_type IN ('PYQ', 'NCERT', 'EXEMPLAR', 'SAMPLE_PATTERN', 'PRACTICE', 'DPP', 'CHEAT_SHEET', 'ROADMAP')),
+    question_format VARCHAR(32),
+    question_latex TEXT,
+    solution_latex TEXT,
+    rubric_steps JSONB,                            -- step-by-step marking rubric (Board)
+    mcq_options JSONB,                             -- 4 options with distractor explanations (Competitive)
+    correct_answer VARCHAR(255),
+    difficulty_level VARCHAR(16) CHECK (difficulty_level IN ('EASY', 'MEDIUM', 'HARD', 'CHALLENGER')),
+    year_tag VARCHAR(32),                          -- e.g. 'CBSE_2024', 'NEET_2022'
+    year_tags VARCHAR(32)[] DEFAULT '{}',
+    marks NUMERIC(5,2),
+    benchmark_time_seconds INT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    CHECK (cardinality(target_modes) > 0)
+);
+
+-- Fast filtered index for mode / board / stream lookups
+CREATE INDEX idx_curriculum_lookup ON curriculum_content
+USING GIN (target_modes, board_targets, competitive_targets);
+CREATE INDEX idx_curriculum_subject_chapter ON curriculum_content (subject_key, grade, chapter_code);
+
+-- 15. DAILY PRACTICE PROBLEM ATTEMPTS (streak tracking)
+CREATE TABLE dpp_attempts (
+    id VARCHAR(64) PRIMARY KEY,
+    school_id VARCHAR(64) NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+    student_id VARCHAR(64) NOT NULL,
+    dpp_id VARCHAR(32) NOT NULL,
+    mode VARCHAR(32) NOT NULL CHECK (mode IN ('BOARD', 'COMPETITIVE')),
+    track VARCHAR(32) NOT NULL,                    -- CBSE / HP_BOARD / ICSE / JEE / NEET
+    subject_key VARCHAR(32) NOT NULL,
+    dpp_date DATE NOT NULL,
+    score NUMERIC(6,2) NOT NULL,
+    max_score NUMERIC(6,2) NOT NULL,
+    correct_count INT NOT NULL DEFAULT 0,
+    wrong_count INT NOT NULL DEFAULT 0,
+    unattempted INT NOT NULL DEFAULT 0,
+    time_taken_seconds INT,
+    completed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_dpp_attempts_streak ON dpp_attempts (school_id, student_id, track, dpp_date);

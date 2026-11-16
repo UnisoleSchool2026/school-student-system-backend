@@ -255,3 +255,15 @@ INSERT INTO weekly_smart_reports (
     ]'::JSONB
 )
 ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- MULTI-TENANT DUAL-MODE SEED (2026-11-16)
+-- Minimal school rows. The JSON profiles in src/registry/tenants/ are the source
+-- of truth; scripts/sync_curriculum_content.js upserts full profiles and the
+-- canonical curriculum_content rows from the subject banks.
+-- ============================================================================
+INSERT INTO schools (id, name, short_name, active_modes, default_mode, profile) VALUES
+('sch_unisole_001', 'Unisole AI School (HIM Academy Public School, Hamirpur)', 'HAPS', ARRAY['BOARD','COMPETITIVE'], 'BOARD', '{"source": "src/registry/tenants/sch_unisole_001.json"}'::jsonb),
+('sch_demo_board_only', 'Sample Tenant: Board-Only Day School', 'DEMO', ARRAY['BOARD'], 'BOARD', '{"source": "src/registry/tenants/sch_demo_board_only.json"}'::jsonb)
+ON CONFLICT (id) DO NOTHING;
+

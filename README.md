@@ -71,7 +71,40 @@ npm test
 npm run test:board-paper
 npm run test:progress
 npm run test:math-bank
+npm run test:dual-mode
 ```
+
+---
+
+## Multi-Tenant Dual-Mode Architecture (Board vs Competitive)
+
+Schools, modes, boards/streams, visible tabs and tools are configured as data (TASK-22, 2026-11-16).
+
+```text
+src/registry/
+  tenants/sch_unisole_001.json      # HAPS profile (BOARD + COMPETITIVE)
+  tenants/sch_demo_board_only.json  # sample board-only school
+  templates/exam_patterns.json      # CBSE, HP Board, ICSE (no content yet), JEE Main, NEET UG
+  workspace_tabs.json               # tabs per mode/role + gating feature flag
+src/modules/                        # dpp, roadmap, cheatsheets, ncertCore, rankAnalytics
+src/services/                       # tenantConfigService, examPatternRegistry, canonicalContentService
+```
+
+| Endpoint | Purpose |
+| :--- | :--- |
+| `GET /api/tenant/config` | Active school profile, tracks with content availability, per-mode tabs |
+| `GET /api/tenant/workspace?mode=&role=` | Tabs for one mode and role |
+| `GET /api/templates/exam-patterns[?mode=]` | Exam pattern template registry |
+| `GET /api/content?mode=&board=&stream=...` | Canonical dual-mode content library (`includeSolutions=true` for answers) |
+| `GET /api/modules/:moduleId?mode=&board=&stream=&grade=&subjectKey=` | Module payload (`dpp`, `roadmap`, `cheatsheets`, `ncert_core`, `rank_analytics`) |
+| `POST /api/modules/dpp/submit`, `GET /api/modules/dpp/streak` | DPP scoring and streaks |
+| `GET /api/questions?mode=COMPETITIVE&stream=JEE` | Existing bank endpoints now accept `mode` (legacy behaviour unchanged without it) |
+
+- **Choose the school:** `x-school-id` header, `?schoolId=`, Host subdomain, or `DEFAULT_SCHOOL_ID` in `.env` (default `sch_unisole_001`).
+- **Add a school:** copy a file in `src/registry/tenants/`, change `schoolId`, modes, boards/streams and feature flags, restart.
+- **Scoring:** `POST /api/assessments/:id/submit` takes negative marking from the matching exam pattern (results include `examPatternId`).
+- **PostgreSQL:** `schema.sql` adds `schools`, `curriculum_content` (GIN index) and `dpp_attempts`; run `node scripts/sync_curriculum_content.js` after schema + seed.
+- **Test:** `npm run test:dual-mode`.
 
 ---
 
