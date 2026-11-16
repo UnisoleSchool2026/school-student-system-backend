@@ -3,6 +3,8 @@
 // Tests authentication, upload pipeline, and extracted tree & topic inspection.
 // ============================================================================
 
+const fs = require('fs');
+const path = require('path');
 const assert = require('assert');
 const ncertService = require('../src/services/ncertReadingEngineService');
 
@@ -77,6 +79,16 @@ async function runTests() {
   console.log('\n======================================================');
   console.log('🎉 ALL NCERT READING ENGINE TESTS VERIFIED 100%!');
   console.log('======================================================');
+
+  // Clean up test book from store and disk so test does not pollute clean un-uploaded state
+  ncertService.books.clear();
+  ncertService.chapters.clear();
+  ncertService.topics.clear();
+  ncertService.jobs.clear();
+  const storageFile = path.join(__dirname, '../src/database/ncert_reading_books.json');
+  if (fs.existsSync(storageFile)) {
+    fs.unlinkSync(storageFile);
+  }
 }
 
 runTests().catch(err => {

@@ -402,17 +402,36 @@ Key Pedagogical Summary:
 
     // Stage 4: chapter_topic_detection
     const detectedChapters = [];
+    const chapterWordMap = {
+      one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+      eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17,
+      eighteen: 18, nineteen: 19, twenty: 20
+    };
+
     await this.runStage(job, 'chapter_topic_detection', 85, 250, async () => {
-      // Decompose into chapters using Chapter / Unit regex
-      const chapterRegex = /(?:^|\n)(?:chapter|unit)\s+(\d+)[:\s–-]+([^\n]+)/gi;
+      // Regex supporting Chapter, Unit, अध्याय, इकाई in digits or word numerals
+      const chapterRegex = /(?:^|\n)\s*(?:chapter|unit|अध्याय|इकाई)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)[\s:\-–.]*([^\n]*)/gi;
       let match;
       const chapterIndices = [];
 
       while ((match = chapterRegex.exec(cleanedText)) !== null) {
+        const rawNum = match[1].toLowerCase();
+        const chNum = parseInt(rawNum, 10) || chapterWordMap[rawNum] || (chapterIndices.length + 1);
+        let title = (match[2] || '').trim();
+
+        // If title is blank on same line, look at the immediate next non-empty line
+        if (!title || title.length < 3) {
+          const afterPos = match.index + match[0].length;
+          const nextLines = cleanedText.slice(afterPos, afterPos + 200).split('\n').map(l => l.trim()).filter(Boolean);
+          if (nextLines.length > 0 && nextLines[0].length < 120 && !/^\d+\.\d+/.test(nextLines[0])) {
+            title = nextLines[0];
+          }
+        }
+
         chapterIndices.push({
           index: match.index,
-          no: parseInt(match[1], 10),
-          title: match[2].trim()
+          no: chNum,
+          title: title || `Chapter ${chNum}`
         });
       }
 
@@ -425,7 +444,7 @@ Key Pedagogical Summary:
         chapterIndices.push({
           index: 0,
           no: 1,
-          title: cleanTitle || `${meta.subject} Module 1`
+          title: cleanTitle || `${meta.subject} Chapter 1`
         });
       }
 
@@ -434,18 +453,44 @@ Key Pedagogical Summary:
         const next = chapterIndices[i + 1];
         const chText = cleanedText.slice(cur.index, next ? next.index : undefined);
 
-        // Detect topic sections e.g. "1.1 Title", "1.2 Title"
-        const topicRegex = /(?:^|\n)\s*(\d+\.\d+)\s+([^\n]+)/g;
+        // Detect topic sections e.g. "1.1 Title", "1.2 Title", "1.2.1 Title"
+        const topicRegex = /(?:^|\n)\s*(\d+(?:\.\d+)+)\s+([^\n]+)/g;
         const topicIndices = [];
         let topMatch;
 
         while ((topMatch = topicRegex.exec(chText)) !== null) {
+          const code = topMatch[1];
+          const rawTitle = topMatch[2].trim().replace(/[:.\-–]+$/, '');
+          if (rawTitle.length >= 2 && !/^\d+$/.test(rawTitle)) {
+            topicIndices.push({
+              code,
+              title: rawTitle,
+              index: topMatch.index
+            });
+          }
+        }
+
+        // Also check for standard NCERT end-blocks (Summary, Exercises, Activities)
+        const summaryMatch = /(?:^|\n)\s*(summary|what you have learnt|points to ponder)\b[^\n]*/i.exec(chText);
+        if (summaryMatch) {
           topicIndices.push({
-            code: topMatch[1],
-            title: topMatch[2].trim(),
-            index: topMatch.index
+            code: `${cur.no}.S`,
+            title: 'Summary & Key Concepts',
+            index: summaryMatch.index
           });
         }
+
+        const exerciseMatch = /(?:^|\n)\s*(exercises|questions)\b[^\n]*/i.exec(chText);
+        if (exerciseMatch) {
+          topicIndices.push({
+            code: `${cur.no}.E`,
+            title: 'NCERT Chapter Exercises',
+            index: exerciseMatch.index
+          });
+        }
+
+        // Sort topic indices by their position in chapter text
+        topicIndices.sort((a, b) => a.index - b.index);
 
         const topics = [];
         if (topicIndices.length > 0) {
@@ -458,24 +503,24 @@ Key Pedagogical Summary:
               code: tCur.code,
               title: tCur.title,
               text: tText || `Extracted authentic section for ${tCur.code} ${tCur.title}`,
-              confidence: 0.95
+              confidence: 0.96
             });
           }
         } else {
-          // Break into paragraphs or logical sections
+          // Break into standard foundational sections for the chapter
           const paras = chText.split(/\n\s*\n/).filter(p => p.trim().length > 30);
           topics.push({
             code: `${cur.no}.1`,
-            title: `${cur.title} - Overview & Foundations`,
-            text: chText.slice(0, 3000) || `Extracted foundation content for ${cur.title}.`,
-            confidence: 0.90
+            title: `${cur.title} - Core Principles & Theory`,
+            text: chText.slice(0, 4000) || `Extracted foundation content for ${cur.title}.`,
+            confidence: 0.92
           });
           if (paras.length > 2) {
             topics.push({
               code: `${cur.no}.2`,
-              title: `${cur.title} - Detailed Principles & Examples`,
+              title: `${cur.title} - Applications & Solved Numericals`,
               text: paras.slice(1).join('\n\n').slice(0, 4000),
-              confidence: 0.92
+              confidence: 0.94
             });
           }
         }
