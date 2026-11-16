@@ -28,6 +28,26 @@ try {
   console.warn('[NCERT ENGINE] Optional pdf-parse module warning:', err.message);
 }
 
+function compareTopicCodes(a, b) {
+  const codeA = String((a && (a.code || a.topic_code)) || '').trim();
+  const codeB = String((b && (b.code || b.topic_code)) || '').trim();
+  if (!codeA) return 1;
+  if (!codeB) return -1;
+  const partsA = codeA.split('.').map(p => isNaN(p) ? p : Number(p));
+  const partsB = codeB.split('.').map(p => isNaN(p) ? p : Number(p));
+  for (let k = 0; k < Math.max(partsA.length, partsB.length); k++) {
+    if (partsA[k] === undefined) return -1;
+    if (partsB[k] === undefined) return 1;
+    if (typeof partsA[k] === 'number' && typeof partsB[k] === 'number') {
+      if (partsA[k] !== partsB[k]) return partsA[k] - partsB[k];
+    } else {
+      const diff = String(partsA[k]).localeCompare(String(partsB[k]));
+      if (diff !== 0) return diff;
+    }
+  }
+  return 0;
+}
+
 const STORAGE_FILE = path.join(__dirname, '../database/ncert_reading_books.json');
 
 // JWT secret for local token signing
@@ -563,9 +583,28 @@ Key Pedagogical Summary:
         status: 'approved'
       };
 
+      // Sort topics by natural code order (e.g. 1.1, 1.2, 1.5, 1.5.1, 1.5.2)
+      if (Array.isArray(chData.topics)) {
+        chData.topics.sort(compareTopicCodes);
+      }
+
+      // Map code to created topic ID for establishing parent-child hierarchy
+      const codeToTopicId = new Map();
+
       chData.topics.forEach((topData, topIdx) => {
         const topicId = `top_${chapterId}_${topIdx + 1}`;
         chapter.topic_ids.push(topicId);
+        codeToTopicId.set(topData.code, topicId);
+
+        // Derive parent topic if this is a sub-topic (e.g., 1.5.1 parent is 1.5)
+        let parentId = null;
+        if (topData.code && topData.code.includes('.')) {
+          const segs = topData.code.split('.');
+          if (segs.length > 2) {
+            const parentCode = segs.slice(0, -1).join('.');
+            parentId = codeToTopicId.get(parentCode) || null;
+          }
+        }
 
         const wordCount = topData.text.split(/\s+/).filter(Boolean).length;
         const topic = {
@@ -576,7 +615,7 @@ Key Pedagogical Summary:
           topic_code: topData.code,
           code: topData.code,
           position: topIdx + 1,
-          parent_id: null,
+          parent_id: parentId,
           content_text: topData.text,
           content_blocks: [
             { type: 'paragraph', text: topData.text }
@@ -718,6 +757,8 @@ Key Pedagogical Summary:
           confidence: top.confidence
         };
       }).filter(Boolean);
+
+      topics.sort(compareTopicCodes);
 
       return {
         id: ch.id,
