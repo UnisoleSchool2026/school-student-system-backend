@@ -44,6 +44,9 @@ jobs:
       - name: Run LaTeX rendering and options test suite
         run: node scripts/test_latex_rendering_and_options.js
 
+      - name: Run multi-tenant dual-mode registry test suite
+        run: npm run test:dual-mode
+
   live-server:
     name: Live Server Smoke and Math Bank Tests
     runs-on: ubuntu-latest
@@ -137,6 +140,11 @@ jobs:
           psql -h localhost -U haps_admin -d haps_scholar_db -f database/schema.sql
           echo "Applying database seed data..."
           psql -h localhost -U haps_admin -d haps_scholar_db -f database/seed_data.sql
+
+      - name: Sync tenant profiles and canonical curriculum content
+        env:
+          DATABASE_URL: postgres://haps_admin:haps_secure_password_2026@localhost:5432/haps_scholar_db
+        run: node scripts/sync_curriculum_content.js
 
       - name: Boot server with PostgreSQL connection and verify health
         env:

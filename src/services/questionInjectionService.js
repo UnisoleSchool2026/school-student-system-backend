@@ -277,6 +277,18 @@ function detectMarksFromText(text = '') {
 /**
  * Intelligent Difficulty Auto-Evaluation
  */
+// Picks up an exam + year written in the question, e.g. "[CBSE 2023]", "(JEE Main 2024)", "NEET-2022".
+function detectExamYearFromText(text = '') {
+  const t = String(text).toUpperCase();
+  const m = t.match(/(CBSE|HPBOSE|HP\s*BOARD|JEE\s*-?\s*ADVANCED|JEE\s*-?\s*MAIN|JEE|NEET|AIPMT)[^0-9\n]{0,15}((?:19|20)\d{2})/);
+  if (m) {
+    const exam = m[1].replace(/\s*-\s*|\s+/g, ' ').trim().replace('HPBOSE', 'HP BOARD').replace('JEE ADVANCED', 'JEE Advanced').replace('JEE MAIN', 'JEE Main').replace('HP BOARD', 'HP Board');
+    return { exam, year: m[2] };
+  }
+  const y = t.match(/[\[(]\s*((?:19|20)\d{2})\s*[\])]/);
+  return { exam: null, year: y ? y[1] : null };
+}
+
 function detectDifficultyFromMarks(marks, text = '') {
   const lower = text.toLowerCase();
   if (lower.includes('jee advanced') || lower.includes('olympiad') || lower.includes('aiims') || marks === 5) return 'HARD';
@@ -315,11 +327,13 @@ function parseSingleQuestionText({ text, targetSubject = 'Physics', grade = '12'
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   let questionPrompt = '';
   const options = [];
-  let answerKey = 'A';
+  let answerKey = null; // only set when the teacher's text states it (never invented)
   let solutionText = '';
 
-  const answerRegex = /(?:answer|ans|correct|option)[:\s]*\(?([A-D])\)?/i;
-  const solutionRegex = /(?:solution|explanation|working|step)[:\s]*(.+)/i;
+  const answerRegex = /^(?:answer|ans|correct(?:\s+(?:answer|option))?|key)\s*[:.\-)]\s*(?:option\s*)?\(?([A-D])\)?(?:\s|$|[.)])/i;
+  // Anchored to the start of a line: the word "solution" inside a question ("molarity of a solution")
+  // must not swallow the question as if it were the worked solution.
+  const solutionRegex = /^(?:solution|sol|explanation|working|step\s*\d*)\s*[:.\-]\s*(.*)$/i;
 
   let inSolution = false;
   const nonSolutionLines = [];
@@ -352,7 +366,7 @@ function parseSingleQuestionText({ text, targetSubject = 'Physics', grade = '12'
   const isAssertionReason = /Assertion\s*\([A-Za-z0-9]\)/i.test(promptBlock) && /Reason\s*\([A-Za-z0-9]\)/i.test(promptBlock);
 
   // Extract options (A), (B), (C), (D) across lines or inline
-  const optionRegex = /(?:\(([A-D])\)|(?:\b|^)([A-D])\))\s*([^(\n\r]+)/g;
+  const optionRegex = /(?:\(([A-Da-d])\)|(?:\b|^)([A-Da-d])\))\s*([^(\n\r]+?)(?=\s*(?:\([A-Da-d]\)|(?:\b)[A-Da-d]\))|[\n\r]|$)/g;
   let optMatch;
   while ((optMatch = optionRegex.exec(promptBlock)) !== null) {
     const key = (optMatch[1] || optMatch[2]).toUpperCase();
@@ -362,16 +376,21 @@ function parseSingleQuestionText({ text, targetSubject = 'Physics', grade = '12'
         key,
         latex: sanitizeOptionFormula(val),
         is_correct: key === answerKey,
-        distractor_trap: key === 'B' ? 'Common sign convention slip' : key === 'C' ? 'Neglected boundary condition' : key === 'D' ? 'Formula inversion error' : null
+        distractor_trap: null
       });
     }
   }
+  // A real MCQ has exactly the options A-D (or A-B for true/false style); sub-parts such as
+  // "(a) define ... (b) derive ..." in a subjective question are not options.
+  const optionKeys = options.map(o => o.key).join('');
+  if (!isAssertionReason && options.length && !['AB', 'ABC', 'ABCD'].includes(optionKeys)) options.length = 0;
+  if (!isAssertionReason && options.length && options.some(o => o.latex.length > 160)) options.length = 0;
 
   // If Assertion-Reason question, populate official CBSE standard options
   if (isAssertionReason) {
     options.length = 0;
     options.push(
-      { key: 'A', latex: 'Both Assertion (A) and Reason (R) are true and Reason (R) is the correct explanation of Assertion (A).', is_correct: true, distractor_trap: null },
+      { key: 'A', latex: 'Both Assertion (A) and Reason (R) are true and Reason (R) is the correct explanation of Assertion (A).', is_correct: false, distractor_trap: null },
       { key: 'B', latex: 'Both Assertion (A) and Reason (R) are true, but Reason (R) is NOT the correct explanation of Assertion (A).', is_correct: false, distractor_trap: 'Failed to verify independent reasoning linkage' },
       { key: 'C', latex: 'Assertion (A) is true, but Reason (R) is false.', is_correct: false, distractor_trap: 'Mismatched physical validity of premise' },
       { key: 'D', latex: 'Both Assertion (A) and Reason (R) are false.', is_correct: false, distractor_trap: 'Overgeneralized incorrect physical law' }
@@ -380,7 +399,7 @@ function parseSingleQuestionText({ text, targetSubject = 'Physics', grade = '12'
 
   // Isolate question prompt text before options
   if (options.length >= 2 && !isAssertionReason) {
-    const firstOptIdx = promptBlock.search(/(?:\([A-D]\)|(?:\b|^)[A-D]\))\s+/);
+    const firstOptIdx = promptBlock.search(/(?:\([A-Da-d]\)|(?:\b|^)[A-Da-d]\))\s*/);
     if (firstOptIdx !== -1) {
       questionPrompt = promptBlock.slice(0, firstOptIdx).trim();
     } else {
@@ -409,7 +428,14 @@ function parseSingleQuestionText({ text, targetSubject = 'Physics', grade = '12'
   const detectedDifficulty = detectDifficultyFromMarks(detectedMarks, text);
 
   const hasOptions = options.length >= 2;
-  const questionFormat = hasOptions ? 'MCQ_SINGLE' : (detectedMarks >= 4 ? 'CASE_STUDY' : 'SUBJECTIVE_LONG');
+  if (hasOptions && !text.match(/marks?\b/i)) detectedMarks = 1;
+  const lowerText = text.toLowerCase();
+  const questionFormat = isAssertionReason ? 'ASSERTION_REASON'
+    : hasOptions ? 'MCQ_SINGLE'
+    : /case[\s-]*(?:study|based)|read the (?:following )?(?:passage|paragraph)/.test(lowerText) ? 'CASE_STUDY'
+    : detectedMarks <= 1 ? 'VERY_SHORT_ANSWER'
+    : detectedMarks <= 3 ? 'SHORT_ANSWER'
+    : 'LONG_ANSWER';
 
   if (hasOptions) {
     options.forEach(opt => {
@@ -418,16 +444,10 @@ function parseSingleQuestionText({ text, targetSubject = 'Physics', grade = '12'
     });
   }
 
-  const correctOpt = hasOptions ? (options.find(o => o.is_correct) || options[0]) : null;
-  const correctAns = correctOpt ? correctOpt.latex : 'Verified Comprehensive Derivation & Marking Scheme';
-
-  if (!solutionText) {
-    if (hasOptions) {
-      solutionText = `By applying the fundamental governing equations for ${detectedChapter}:\n$$${correctOpt.latex.replace(/^\$|\$$/g, '')}$$\nSubstituting given parameters and evaluating algebraically yields the verified option.`;
-    } else {
-      solutionText = `Step 1: Governing Physical Law & Conceptual Setup:\nIdentify the relevant governing principle in ${detectedChapter}.\nStep 2: Mathematical Working & Boundary Substitution:\nApply Cartesian conventions and evaluate line-by-line equations.\nStep 3: Verified Final Conclusion with Standard SI Units.`;
-    }
-  }
+  // No answer key in the pasted text -> leave it empty; the teacher picks it in the preview.
+  const correctOpt = hasOptions ? options.find(o => o.is_correct) || null : null;
+  const correctAns = correctOpt ? correctOpt.latex : '';
+  const examYear = detectExamYearFromText(text);
 
   const categoryTag = category === 'CBSE_PYQ' ? 'CBSE Board Examination (Authentic PYQ)' : category === 'NCERT_EXAMPLE' ? 'NCERT Worked In-Text Example' : category === 'NCERT_EXERCISE' ? 'NCERT End-of-Chapter Exercise' : 'Competitive / Advanced Mock';
 
@@ -442,8 +462,11 @@ function parseSingleQuestionText({ text, targetSubject = 'Physics', grade = '12'
     question_latex: questionPrompt || text,
     options_latex: options,
     correct_answer_latex: correctAns,
-    correct_answer: hasOptions ? (correctOpt?.key || 'A') : 'Verified',
+    correct_answer: correctOpt ? correctOpt.key : null,
+    answer_key_missing: hasOptions && !correctOpt,
     solution_latex: solutionText,
+    exam_tag: examYear.exam,
+    pyq_year: examYear.year,
     socratic_hints: [
       `Recall the fundamental governing principles of ${detectedChapter}.`,
       'Carefully check the units and dimensional consistency before substituting numerical values.',
@@ -706,7 +729,9 @@ async function processQuestionExtraction({
   const categoryLabel = category === 'CBSE_PYQ' ? 'CBSE / Board PYQ (Previous Year Question)'
     : category === 'NCERT_EXAMPLE' ? 'NCERT Worked In-Text Example'
       : category === 'NCERT_EXERCISE' ? 'NCERT End-of-Chapter Exercise Question'
-        : 'Competitive Examination / Advanced Practice Mock';
+        : category === 'NCERT_EXEMPLAR' ? 'NCERT Exemplar Problem'
+          : category === 'CBSE_SAMPLE_PATTERN' ? 'CBSE Sample Paper Pattern Question'
+            : 'Competitive Examination (JEE / NEET) Practice';
 
   const systemInstructions = `You are the Lead Academic Assessment & KaTeX Math Specialist for Unisole AI School.
 The teacher has uploaded an assessment document (PDF, test paper photo, or pasted questions) from the discipline: ${targetSubject} (Class ${grade}).
@@ -864,6 +889,19 @@ CRITICAL MULTI-QUESTION AUTO-CATEGORIZATION DIRECTIVES:
     }
   }
 
+  // Nothing readable: an image needs the vision model, and a scanned PDF has no text layer.
+  // Say so instead of inventing a placeholder question.
+  if (!rawText || !rawText.trim()) {
+    const why = mode === 'image'
+      ? (geminiKey ? 'The AI vision service could not read questions from this image.' : 'Reading questions from an image needs the AI vision service (GEMINI_API_KEY), which is not configured on this server.')
+      : mode === 'pdf'
+        ? 'No text could be read from this PDF (it may be a scanned image).' + (geminiKey ? '' : ' Scanned PDFs need the AI vision service (GEMINI_API_KEY).')
+        : 'No question text was provided.';
+    const err = new Error(`${why} Paste the question text in "Paste Text" mode instead.`);
+    err.code = 'EXTRACTION_UNREADABLE';
+    throw err;
+  }
+
   // 3. Fallback: Intelligent Local Multi-Question Parser
   console.log('[INJECTION SERVICE] Using intelligent local KaTeX multi-question parser fallback.');
   const localParsed = parseRawTextLocally({
@@ -908,8 +946,9 @@ function normalizeExtractedPayload(data, targetSubject = 'Physics', grade = '12'
     const finalLatex = qText || `Calculate the fundamental parameters for ${targetSubject} in ${autoChapter}.`;
     const opts = Array.isArray(sanitized.options_latex) ? sanitized.options_latex : [];
     const hasOpts = opts.length >= 2;
-    const correctAns = sanitized.correct_answer_latex || (hasOpts ? opts[0]?.latex : 'Verified Standard Derivation & Physical Law');
-    const solLatex = sanitized.solution_latex || `Step 1: Formula Setup.\nStep 2: Boundary Evaluation.\nStep 3: Verified Answer.`;
+    const keyedOpt = hasOpts ? opts.find(o => o.is_correct) : null;
+    const correctAns = sanitized.correct_answer_latex || (keyedOpt ? keyedOpt.latex : '');
+    const solLatex = sanitized.solution_latex || '';
 
     return {
       ...sanitized,
@@ -919,11 +958,12 @@ function normalizeExtractedPayload(data, targetSubject = 'Physics', grade = '12'
       topic: sanitized.topic || autoChapter,
       marks_weightage: autoMarks,
       difficulty: autoDifficulty,
-      question_format: sanitized.question_format || (hasOpts ? 'MCQ_SINGLE' : (autoMarks >= 4 ? 'CASE_STUDY' : 'SUBJECTIVE_LONG')),
+      question_format: sanitized.question_format || (hasOpts ? 'MCQ_SINGLE' : (autoMarks >= 4 ? 'LONG_ANSWER' : 'SHORT_ANSWER')),
       question_latex: finalLatex,
       options_latex: opts,
       correct_answer_latex: correctAns,
-      correct_answer: sanitized.correct_answer || (hasOpts ? (opts.find(o => o.is_correct)?.key || 'A') : 'Verified'),
+      correct_answer: sanitized.correct_answer || (keyedOpt ? keyedOpt.key : null),
+      answer_key_missing: hasOpts && !(sanitized.correct_answer || keyedOpt),
       solution_latex: solLatex,
       source_category: category,
       ncert_mapping: sanitized.ncert_mapping || {
@@ -947,6 +987,28 @@ function normalizeExtractedPayload(data, targetSubject = 'Physics', grade = '12'
 /**
  * Commits a single validated, structured question into the HAPS-AI repositories
  */
+// Source label stored with an injected question. A year is written only when the teacher's
+// text or the preview supplied one, so the "Exam & Year" filter never shows an invented year.
+function buildInjectedAppearance(category, q = {}, subjectUpper = '') {
+  const year = q.pyq_year ? String(q.pyq_year) : '';
+  const exam = q.exam_tag ? String(q.exam_tag) : '';
+  switch (category) {
+    case 'CBSE_PYQ': {
+      const board = /HP/i.test(exam) ? 'HP Board' : 'CBSE Board';
+      return year ? `${board} ${year} PYQ` : `${board} PYQ (year not tagged)`;
+    }
+    case 'NCERT_EXAMPLE': return 'NCERT Solved Example';
+    case 'NCERT_EXERCISE': return 'NCERT Textbook Exercise';
+    case 'NCERT_EXEMPLAR': return 'NCERT Exemplar';
+    case 'CBSE_SAMPLE_PATTERN': return 'CBSE Sample Paper Pattern';
+    case 'COMPETITIVE_OTHER': {
+      const e = exam && /JEE|NEET|AIPMT/i.test(exam) ? exam : (subjectUpper.includes('BIO') ? 'NEET' : 'JEE Main');
+      return year ? `${e} ${year}` : `${e} Practice`;
+    }
+    default: return 'Teacher Added';
+  }
+}
+
 function commitQuestionToStore({ structuredQuestion, teacher, targetSubject, grade = '12', category = 'CBSE_PYQ', mode = 'text', persistImmediately = true }) {
   const sUpper = (targetSubject || '').toUpperCase();
   const isC10 = String(grade) === '10';
@@ -988,7 +1050,10 @@ function commitQuestionToStore({ structuredQuestion, teacher, targetSubject, gra
     subject: targetSubject,
     subjectKey: sUpper,
     stream: isC10 ? 'FOUNDATION' : (sUpper.includes('BIO') ? 'MEDICAL' : 'COMMON_SENIOR'),
-    target_exam: isC10 ? 'CBSE_CLASS_10' : (sUpper.includes('BIO') ? 'NEET_UG' : 'JEE_MAIN'),
+    // Board categories stay board-only; only "Competitive" injections are tagged JEE / NEET.
+    target_exam: category === 'COMPETITIVE_OTHER'
+      ? (/NEET/i.test(String(structuredQuestion.exam_tag || '')) || (!/JEE/i.test(String(structuredQuestion.exam_tag || '')) && sUpper.includes('BIO')) ? 'NEET_UG' : 'JEE_MAIN')
+      : (isC10 ? 'CBSE_CLASS_10' : 'CBSE_BOARD'),
     chapter_name: chapterName,
     chapter: chapterName,
     topic: structuredQuestion.topic || chapterName,
@@ -996,7 +1061,7 @@ function commitQuestionToStore({ structuredQuestion, teacher, targetSubject, gra
     curriculum_board: isC10 ? 'CBSE_CLASS_10' : 'CBSE',
     source_category: category,
     question_source: category,
-    pyq_appearance: category === 'CBSE_PYQ' ? `CBSE Board Exam (${new Date().getFullYear() - 1} PYQ)` : category === 'NCERT_EXAMPLE' ? 'NCERT Worked In-Text Example' : category === 'NCERT_EXERCISE' ? 'NCERT Textbook Exercise' : 'Competitive Mock',
+    pyq_appearance: buildInjectedAppearance(category, structuredQuestion, sUpper),
     difficulty: difficulty,
     question_format: structuredQuestion.question_format || 'MCQ_SINGLE',
     benchmark_time_seconds: Number(structuredQuestion.benchmark_time_seconds) || marks * 45,
@@ -1004,8 +1069,8 @@ function commitQuestionToStore({ structuredQuestion, teacher, targetSubject, gra
     question_latex: structuredQuestion.question_latex,
     options_latex: structuredQuestion.options_latex || [],
     options: structuredQuestion.options_latex || [],
-    correct_answer_latex: structuredQuestion.correct_answer_latex || 'Option A',
-    correct_answer: (structuredQuestion.options_latex?.find(o => o.is_correct)?.key) || 'A',
+    correct_answer_latex: structuredQuestion.correct_answer_latex || (structuredQuestion.options_latex?.find(o => o.is_correct)?.latex) || '',
+    correct_answer: (structuredQuestion.options_latex?.find(o => o.is_correct)?.key) || structuredQuestion.correct_answer || null,
     solution_latex: structuredQuestion.solution_latex || '',
     socratic_hints: structuredQuestion.socratic_hints || [],
     step_rubric: structuredQuestion.step_rubric || [],

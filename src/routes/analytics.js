@@ -14,6 +14,7 @@
 
 const express = require('express');
 const router = express.Router();
+const subjectScope = require('../services/subjectScope');
 const { inMemoryStore } = require('../config/database');
 
 // ============================================================================
@@ -31,17 +32,11 @@ router.get('/class-dashboard', (req, res) => {
 
     // Filter assessments by teacher's subject if provided
     let relevantAssessments = assessmentsList;
-    if (reqSubjKey) {
-      relevantAssessments = assessmentsList.filter(a => {
-        const aKey = (a.subjectKey || '').toUpperCase();
-        const aSub = (a.subject || '').toUpperCase();
-        return aKey === reqSubjKey 
-          || aSub === reqSubjKey 
-          || aSub.includes(reqSubjKey)
-          || (reqSubjKey.includes('MATH') && (aKey.includes('MATH') || aSub.includes('MATH')))
-          || (reqSubjKey.includes('SCIENCE') && (aKey.includes('SCIENCE') || aSub.includes('SCIENCE')));
-      });
-      if (relevantAssessments.length === 0) relevantAssessments = assessmentsList;
+    const scoped = Boolean(reqSubjKey) && subjectScope.isKnownSubject(reqSubjKey);
+    if (scoped) {
+      // Subject isolation: never fall back to other subjects' tests.
+      relevantAssessments = assessmentsList.filter(a => subjectScope.assessmentInScope(reqSubjKey, a));
+      if (section) relevantAssessments = relevantAssessments.filter(a => String(a.section || a.targetClass || '').toLowerCase() === String(section).toLowerCase());
     }
 
     // Filter submissions for this assessment
@@ -51,6 +46,17 @@ router.get('/class-dashboard', (req, res) => {
     let assessment = null;
     if (assessmentId) {
       assessment = assessmentsList.find(a => a.id === assessmentId);
+      if (assessment && scoped && !subjectScope.assessmentInScope(reqSubjKey, assessment)) {
+        return res.status(403).json({ success: false, error: `Subject isolation: this test is outside the ${reqSubjKey} scope.` });
+      }
+    }
+    if (!assessment && scoped) {
+      assessment = relevantAssessments.find(a => !a.id.startsWith('paper_') && allSubmissions.some(s => s.assessmentId === a.id))
+        || relevantAssessments.find(a => !a.id.startsWith('paper_'))
+        || null;
+      if (!assessment) {
+        return res.json({ success: true, hasSubmissions: false, assessment: null, classSummary: null, questionAnalytics: [], studentRoster: [], availableAssessments: [], message: 'No tests have been published for this subject and class yet.' });
+      }
     }
     if (!assessment) {
       assessment = relevantAssessments.find(a => !a.id.startsWith('paper_') && allSubmissions.some(s => s.assessmentId === a.id)) 
@@ -66,10 +72,13 @@ router.get('/class-dashboard', (req, res) => {
     }
 
     const submissions = allSubmissions.filter(s => s.assessmentId === assessment.id);
+    // Real class size: students enrolled in the test's class (never a hardcoded number).
+    const enrolledInSection = (inMemoryStore.users || []).filter(u => u.role === 'STUDENT' && assessment.section && String(u.section || '').toLowerCase() === String(assessment.section).toLowerCase()).length;
+    const enrolledForAssessment = Math.max(enrolledInSection, new Set(submissions.map(s => s.studentId)).size);
 
     // Helper to format available assessments sorted by submission count
     const getAvailableAssessmentsList = () => {
-      const pool = [...relevantAssessments, ...assessmentsList.filter(a => !relevantAssessments.some(r => r.id === a.id))];
+      const pool = scoped ? relevantAssessments : [...relevantAssessments, ...assessmentsList.filter(a => !relevantAssessments.some(r => r.id === a.id))];
       return pool
         .filter(a => !a.id.startsWith('paper_') || (assessment && a.id === assessment.id))
         .sort((a, b) => {
@@ -405,8 +414,8 @@ router.get('/class-dashboard', (req, res) => {
       },
       classSummary: {
         totalSubmissions: submissions.length,
-        classEnrolledCount: 32,
-        participationRate: `${Math.round((submissions.length / 32) * 100)}%`,
+        classEnrolledCount: enrolledForAssessment,
+        participationRate: `${Math.round((submissions.length / Math.max(1, enrolledForAssessment)) * 100)}%`,
         averageScore: avgScore,
         averagePercentage: `${avgPercentage}%`,
         highestScore: {
@@ -571,6 +580,45 @@ router.get('/student-test-drilldown/:studentId/:assessmentId', (req, res) => {
 // ============================================================================
 // 3. GET /api/analytics/student/:id (Overall Concept Mastery)
 // ============================================================================
+// GET /api/analytics/student/:id/submissions - The student's own submitted tests (newest first).
+// Only tests assigned to the student's own class are returned (student content isolation).
+router.get('/student/:id/submissions', (req, res) => {
+  try {
+    const student = (inMemoryStore.users || []).find(u => u.id === req.params.id);
+    if (!student) return res.status(404).json({ success: false, error: 'Student not found' });
+    const assessments = inMemoryStore.assessments || [];
+    const list = (inMemoryStore.submissions || [])
+      .filter(s => s.studentId === student.id)
+      .map(s => ({ s, a: assessments.find(a => a.id === s.assessmentId) }))
+      .filter(({ a }) => a && String(a.section || a.targetClass || '').toLowerCase() === String(student.section || '').toLowerCase())
+      .map(({ s, a }) => ({
+        submissionId: s.submissionId || s.id,
+        assessmentId: a.id,
+        title: a.title,
+        subject: a.subject,
+        chapter: a.chapterName || a.chapter || '',
+        questionCount: (a.questions || []).length,
+        totalScore: s.totalScore,
+        totalMarks: s.totalMarks || a.totalMarks,
+        percentage: s.percentage,
+        totalTimeSpentSeconds: s.totalTimeSpentSeconds || 0,
+        submittedAt: s.submittedAt || null,
+        questionBreakdown: (s.questionBreakdown || []).map(q => ({
+          questionIndex: q.questionIndex,
+          topic: q.topic,
+          subtopic: q.subtopic,
+          isCorrect: q.isCorrect,
+          selectedOption: q.selectedOption,
+          correctAnswer: q.correctAnswer
+        }))
+      }))
+      .sort((x, y) => String(y.submittedAt || '').localeCompare(String(x.submittedAt || '')));
+    res.json({ success: true, student: { id: student.id, name: student.full_name, section: student.section }, count: list.length, submissions: list });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 router.get('/student/:id', (req, res) => {
   const studentId = req.params.id || 'b0000000-0000-0000-0000-000000000001';
   const student = inMemoryStore.users.find(u => u.id === studentId) || {
