@@ -181,7 +181,7 @@ Solution: Magnetic field at center $B = \\frac{\\mu_0 I}{2r} = \\frac{\\mu_0 V}{
     assert(imgParsed.question_latex, 'Image extraction must produce question_latex');
     assert(Array.isArray(imgParsed.options_latex), 'Options must be an array');
   }
-  console.log('✅ PASS: Image pipeline either extracts real questions or refuses clearly (no invented question)');
+  console.log('PASS: Image pipeline either extracts real questions or refuses clearly (no invented question)');
 
   // Test 6: Multi-Question Document Auto-Categorization & Batch Ingestion
   console.log('\n--- TEST 6: Multi-Question Document Auto-Categorization & Batch Ingestion ---');

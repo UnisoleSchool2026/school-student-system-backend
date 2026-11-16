@@ -13,6 +13,8 @@
     "test:remedial": "node scripts/test_personalized_remedial_flow.js",
     "test:math-bank": "node scripts/test_math_question_bank.js",
     "test:dual-mode": "node scripts/test_dual_mode_registry.js",
+    "test:dual-mode": "node scripts/test_dual_mode_registry.js",
+    "test:dpp": "node scripts/test_teacher_dpp_and_principal.js",
     "test:ncert": "node scripts/test_ncert_reading_engine.js"
   },
   "dependencies": {
