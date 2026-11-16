@@ -66,6 +66,9 @@ class NcertReadingEngineService {
   init() {
     if (this.initialized) return;
     this.loadFromDisk();
+    if (this.books.size === 0) {
+      this.seedDefaultBooks();
+    }
     this.initialized = true;
     console.log(`[NCERT ENGINE] Initialized with ${this.books.size} books, ${this.chapters.size} chapters, and ${this.topics.size} topics.`);
   }

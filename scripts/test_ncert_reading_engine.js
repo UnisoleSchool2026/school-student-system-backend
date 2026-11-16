@@ -80,14 +80,10 @@ async function runTests() {
   console.log('🎉 ALL NCERT READING ENGINE TESTS VERIFIED 100%!');
   console.log('======================================================');
 
-  // Clean up test book from store and disk so test does not pollute clean un-uploaded state
-  ncertService.books.clear();
-  ncertService.chapters.clear();
-  ncertService.topics.clear();
-  ncertService.jobs.clear();
-  const storageFile = path.join(__dirname, '../src/database/ncert_reading_books.json');
-  if (fs.existsSync(storageFile)) {
-    fs.unlinkSync(storageFile);
+  // Clean up only the temporary test book from store
+  if (jobState && jobState.book_id) {
+    ncertService.books.delete(jobState.book_id);
+    ncertService.saveToDisk();
   }
 }
 

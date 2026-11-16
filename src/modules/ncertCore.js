@@ -72,16 +72,25 @@ function build(ctx) {
   let matchedBook = null;
   if (grade) {
     matchedBook = allBooks.find(b => String(b.class_no) === String(grade) && (
-      (subjectKey && b.subject.toLowerCase().includes(subjectKey.toLowerCase())) ||
-      (b.subject.toLowerCase() === 'science' || b.subject.toLowerCase() === 'physics')
+      (subjectKey && (b.subject.toLowerCase().includes(subjectKey.toLowerCase()) || subjectKey.toLowerCase().includes(b.subject.toLowerCase())))
     ));
+    if (!matchedBook) {
+      matchedBook = allBooks.find(b => String(b.class_no) === String(grade));
+    }
   }
   if (!matchedBook && allBooks.length > 0) matchedBook = allBooks[0];
   const activeBookId = ctx.bookId || (matchedBook ? matchedBook.id : null);
   let activeBookTree = null;
+  let firstTopic = null;
   if (activeBookId) {
     try {
       activeBookTree = ncertEngine.getBookTree(activeBookId, true);
+      if (activeBookTree && activeBookTree.chapters && activeBookTree.chapters.length > 0) {
+        const ch0 = activeBookTree.chapters[0];
+        if (ch0 && ch0.topics && ch0.topics.length > 0) {
+          firstTopic = ncertEngine.getTopic(ch0.topics[0].id);
+        }
+      }
     } catch (e) {}
   }
 
@@ -120,7 +129,8 @@ function build(ctx) {
         isReadingEngine: true,
         books: allBooks,
         activeBookId,
-        activeBookTree
+        activeBookTree,
+        firstTopic
       }
     }
   };
