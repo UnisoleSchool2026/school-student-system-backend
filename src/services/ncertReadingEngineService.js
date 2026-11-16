@@ -48,6 +48,237 @@ function compareTopicCodes(a, b) {
   return 0;
 }
 
+const CANONICAL_PHYSICS_12 = {
+  1: {
+    title: 'Electric Charges and Fields',
+    topics: {
+      '1.1': 'Introduction',
+      '1.2': 'Electric Charge',
+      '1.3': 'Conductors and Insulators',
+      '1.4': 'Charging by Induction',
+      '1.5': 'Basic Properties of Electric Charge',
+      '1.5.1': 'Additivity of Charges',
+      '1.5.2': 'Charge is Conserved',
+      '1.5.3': 'Quantisation of Charge',
+      '1.6': "Coulomb's Law",
+      '1.7': 'Forces between Multiple Charges',
+      '1.8': 'Electric Field',
+      '1.8.1': 'Electric Field due to a System of Charges',
+      '1.8.2': 'Physical Significance of Electric Field',
+      '1.9': 'Electric Field Lines',
+      '1.10': 'Electric Flux',
+      '1.11': 'Electric Dipole',
+      '1.11.1': 'The Field of an Electric Dipole',
+      '1.11.2': 'Physical Significance of Dipoles',
+      '1.12': 'Dipole in a Uniform External Field',
+      '1.13': 'Continuous Charge Distribution',
+      '1.14': "Gauss's Law",
+      '1.15': "Applications of Gauss's Law",
+      '1.15.1': 'Field Due to an Infinitely Long Straight Uniformly Charged Wire',
+      '1.15.2': 'Field Due to a Uniformly Charged Infinite Plane Sheet',
+      '1.15.3': 'Field Due to a Uniformly Charged Thin Spherical Shell',
+      '1.S': 'Summary & Key Concepts',
+      '1.E': 'NCERT Chapter Exercises'
+    }
+  },
+  2: {
+    title: 'Electrostatic Potential and Capacitance',
+    topics: {
+      '2.1': 'Introduction',
+      '2.2': 'Electrostatic Potential',
+      '2.3': 'Potential due to a Point Charge',
+      '2.4': 'Potential due to an Electric Dipole',
+      '2.5': 'Potential due to a System of Charges',
+      '2.6': 'Equipotential Surfaces',
+      '2.6.1': 'Relation between Field and Potential',
+      '2.7': 'Potential Energy of a System of Charges',
+      '2.8': 'Potential Energy in an External Field',
+      '2.8.1': 'Potential Energy of a Single Charge',
+      '2.8.2': 'Potential Energy of a System of Two Charges in an External Field',
+      '2.8.3': 'Potential Energy of a Dipole in an External Field',
+      '2.9': 'Electrostatics of Conductors',
+      '2.10': 'Dielectrics and Polarisation',
+      '2.11': 'Capacitors and Capacitance',
+      '2.12': 'The Parallel Plate Capacitor',
+      '2.13': 'Effect of Dielectric on Capacitance',
+      '2.14': 'Combination of Capacitors',
+      '2.14.1': 'Capacitors in Series',
+      '2.14.2': 'Capacitors in Parallel',
+      '2.15': 'Energy Stored in a Capacitor',
+      '2.16': 'Van de Graaff Generator',
+      '2.S': 'Summary & Key Concepts',
+      '2.E': 'NCERT Chapter Exercises'
+    }
+  },
+  3: {
+    title: 'Current Electricity',
+    topics: {
+      '3.1': 'Introduction',
+      '3.2': 'Electric Current',
+      '3.3': 'Electric Currents in Conductors',
+      '3.4': "Ohm's Law",
+      '3.5': 'Drift of Electrons and the Origin of Resistivity',
+      '3.5.1': 'Mobility',
+      '3.6': "Limitations of Ohm's Law",
+      '3.7': 'Resistivity of Various Materials',
+      '3.8': 'Temperature Dependence of Resistivity',
+      '3.9': 'Electrical Energy, Power',
+      '3.10': 'Combination of Resistors – Series and Parallel',
+      '3.11': 'Cells, Emf, Internal Resistance',
+      '3.12': 'Cells in Series and in Parallel',
+      '3.13': "Kirchhoff's Rules",
+      '3.14': 'Wheatstone Bridge',
+      '3.15': 'Meter Bridge',
+      '3.16': 'Potentiometer',
+      '3.S': 'Summary & Key Concepts',
+      '3.E': 'NCERT Chapter Exercises'
+    }
+  },
+  4: {
+    title: 'Moving Charges and Magnetism',
+    topics: {
+      '4.1': 'Introduction',
+      '4.2': 'Magnetic Force',
+      '4.3': 'Motion in a Magnetic Field',
+      '4.4': 'Motion in Combined Electric and Magnetic Fields',
+      '4.5': 'Magnetic Field due to a Current Element, Biot-Savart Law',
+      '4.6': 'Magnetic Field on the Axis of a Circular Current Loop',
+      '4.7': "Ampere's Circuital Law",
+      '4.8': 'The Solenoid and the Toroid',
+      '4.9': 'Force between Two Parallel Currents, the Ampere',
+      '4.10': 'Torque on Current Loop, Magnetic Dipole',
+      '4.11': 'The Moving Coil Galvanometer',
+      '4.S': 'Summary & Key Concepts',
+      '4.E': 'NCERT Chapter Exercises'
+    }
+  },
+  5: {
+    title: 'Magnetism and Matter',
+    topics: {
+      '5.1': 'Introduction',
+      '5.2': 'The Bar Magnet',
+      '5.2.1': 'The Magnetic Field Lines',
+      '5.2.2': 'Bar Magnet as an Equivalent Solenoid',
+      '5.2.3': 'The Dipole in a Uniform Magnetic Field',
+      '5.2.4': 'The Electrostatic Analog',
+      '5.3': "Magnetism and Gauss's Law",
+      '5.4': "The Earth's Magnetism",
+      '5.4.1': 'Magnetic Declination and Dip',
+      '5.5': 'Magnetisation and Magnetic Intensity',
+      '5.6': 'Magnetic Properties of Materials',
+      '5.6.1': 'Diamagnetism',
+      '5.6.2': 'Paramagnetism',
+      '5.6.3': 'Ferromagnetism',
+      '5.7': 'Permanent Magnets and Electromagnets',
+      '5.S': 'Summary & Key Concepts',
+      '5.E': 'NCERT Chapter Exercises'
+    }
+  },
+  6: {
+    title: 'Electromagnetic Induction',
+    topics: {
+      '6.1': 'Introduction',
+      '6.2': 'The Experiments of Faraday and Henry',
+      '6.3': 'Magnetic Flux',
+      '6.4': "Faraday's Law of Induction",
+      '6.5': "Lenz's Law and Conservation of Energy",
+      '6.6': 'Motional Electromotive Force',
+      '6.7': 'Energy Consideration: A Quantitative Study',
+      '6.8': 'Eddy Currents',
+      '6.9': 'Inductance',
+      '6.9.1': 'Mutual Inductance',
+      '6.9.2': 'Self-Inductance',
+      '6.10': 'AC Generator',
+      '6.S': 'Summary & Key Concepts',
+      '6.E': 'NCERT Chapter Exercises'
+    }
+  },
+  7: {
+    title: 'Alternating Current',
+    topics: {
+      '7.1': 'Introduction',
+      '7.2': 'AC Voltage Applied to a Resistor',
+      '7.3': 'Representation of AC Current and Voltage by Rotating Vectors — Phasors',
+      '7.4': 'AC Voltage Applied to an Inductor',
+      '7.5': 'AC Voltage Applied to a Capacitor',
+      '7.6': 'AC Voltage Applied to a Series LCR Circuit',
+      '7.6.1': 'Phasor-Diagram Solution',
+      '7.6.2': 'Analytical Solution',
+      '7.6.3': 'Resonance',
+      '7.7': 'Power in AC Circuit: The Power Factor',
+      '7.8': 'LC Oscillations',
+      '7.9': 'Transformers',
+      '7.S': 'Summary & Key Concepts',
+      '7.E': 'NCERT Chapter Exercises'
+    }
+  },
+  8: {
+    title: 'Electromagnetic Waves',
+    topics: {
+      '8.1': 'Introduction',
+      '8.2': 'Displacement Current',
+      '8.3': 'Electromagnetic Waves',
+      '8.3.1': 'Sources of Electromagnetic Waves',
+      '8.3.2': 'Nature of Electromagnetic Waves',
+      '8.4': 'Electromagnetic Spectrum',
+      '8.4.1': 'Radio Waves',
+      '8.4.2': 'Microwaves',
+      '8.4.3': 'Infrared Waves',
+      '8.4.4': 'Visible Rays',
+      '8.4.5': 'Ultraviolet Rays',
+      '8.4.6': 'X-Rays',
+      '8.4.7': 'Gamma Rays',
+      '8.S': 'Summary & Key Concepts',
+      '8.E': 'NCERT Chapter Exercises'
+    }
+  }
+};
+
+function repairKerning(str) {
+  if (!str) return '';
+  let s = str.replace(/[‘’]/g, "'").replace(/[“”]/g, '"');
+  for (let i = 0; i < 3; i++) {
+    s = s.replace(/\b([B-HJ-Z])\s+([A-Z]{2,})\b/g, '$1$2');
+    s = s.replace(/\b([A-Z]{2,})\s+([B-HJ-Z])\b/g, '$1$2');
+  }
+  s = s.replace(/\b([A-Z])\s+([A-Z]{1,2})\b/g, (m, p1, p2) => {
+    if (p1 === 'A' || p1 === 'I') return m;
+    return p1 + p2;
+  });
+  s = s.replace(/([A-Za-z]+)\s+['’]\s*s\b/gi, "$1's");
+  return s.replace(/\s+/g, ' ').trim();
+}
+
+function isNoiseHeading(code, title, chapterNo) {
+  if (!code || !title) return true;
+  const parts = code.split('.');
+  if (parseInt(parts[0], 10) !== chapterNo) return true;
+
+  const t = title.trim();
+  if (t.length < 2 || t.length > 90) return true;
+  if (/^example\b/i.test(t) || /\bexample\s*\d+/i.test(t) || /^e\s*x\s*a\s*m\s*p\s*l\s*e\b/i.test(t)) return true;
+  if (/^solution\b/i.test(t)) return true;
+  if (/^exercises?\b/i.test(t) && !code.endsWith('.E')) return true;
+  if (/^(?:figure|fig\.?|table|graph)\b/i.test(t)) return true;
+  if (/^\[?eq(?:\.|uation)?\b/i.test(t)) return true;
+  if (/--\s*\d+\s*(?:of\s*\d+)?/i.test(t)) return true;
+  if (/^\([a-z0-9ivx]+\)\s+/i.test(t)) return true;
+  if (/^[=×]/i.test(t) || /[=×].*[+×\-\/]/i.test(t)) return true;
+  if (/^[\d.\s°CΩkga-z+-]+$/i.test(t)) return true;
+  if (t.endsWith('?') || t.endsWith(':')) return true;
+  if ((t.match(/[a-zA-Z]/g) || []).length < 3) return true;
+
+  // Exercise question starters
+  const questionPfx = /^(calculate|determine|state|explain|write|find|show|prove|what|why|how|which|mention|predict|draw|solve|evaluate|answer\s+the|choose\s+the|two\s+charges|four\s+point|a\s+battery|a\s+storage|a\s+silver|a\s+particle|a\s+system|a\s+regular|a\s+spherical|a\s+parallel|a\s+cell|an\s+electron|a\s+point|in\s+a\s+potentiometer|careful\s+measurement|obtain\s+the|suppose\s+that)/i;
+  if (questionPfx.test(t)) return true;
+
+  // NCERT section titles never begin with lower-case letters
+  if (/^[a-z]/.test(t)) return true;
+
+  return false;
+}
+
+
 const STORAGE_FILE = path.join(__dirname, '../database/ncert_reading_books.json');
 
 // JWT secret for local token signing
@@ -476,6 +707,11 @@ Key Pedagogical Summary:
         const next = chapterIndices[i + 1];
         const chText = cleanedText.slice(cur.index, next ? next.index : undefined);
 
+        const canon = CANONICAL_PHYSICS_12[cur.no];
+        if (canon) {
+          cur.title = canon.title;
+        }
+
         // Detect topic sections e.g. "1.1 Title", "1.2 Title", "1.2.1 Title"
         const topicRegex = /(?:^|\n)\s*(\d+(?:\.\d+)+)\s+([^\n]+)/g;
         const topicIndices = [];
@@ -483,14 +719,20 @@ Key Pedagogical Summary:
 
         while ((topMatch = topicRegex.exec(chText)) !== null) {
           const code = topMatch[1];
-          const rawTitle = topMatch[2].trim().replace(/[:.\-–]+$/, '');
-          if (rawTitle.length >= 2 && !/^\d+$/.test(rawTitle)) {
-            topicIndices.push({
-              code,
-              title: rawTitle,
-              index: topMatch.index
-            });
+          let rawTitle = topMatch[2].trim().replace(/[:.\-–]+$/, '');
+          if (isNoiseHeading(code, rawTitle, cur.no)) {
+            continue;
           }
+          if (canon && canon.topics[code]) {
+            rawTitle = canon.topics[code];
+          } else {
+            rawTitle = repairKerning(rawTitle);
+          }
+          topicIndices.push({
+            code,
+            title: rawTitle,
+            index: topMatch.index
+          });
         }
 
         // Also check for standard NCERT end-blocks (Summary, Exercises, Activities)
@@ -515,21 +757,49 @@ Key Pedagogical Summary:
         // Sort topic indices by their position in chapter text
         topicIndices.sort((a, b) => a.index - b.index);
 
-        const topics = [];
+        const rawTopics = [];
         if (topicIndices.length > 0) {
           for (let j = 0; j < topicIndices.length; j++) {
             const tCur = topicIndices[j];
             const tNext = topicIndices[j + 1];
             const tText = chText.slice(tCur.index, tNext ? tNext.index : undefined).trim();
 
-            topics.push({
+            rawTopics.push({
               code: tCur.code,
               title: tCur.title,
               text: tText || `Extracted authentic section for ${tCur.code} ${tCur.title}`,
               confidence: 0.96
             });
           }
-        } else {
+        }
+
+        // Deduplicate topics by code, preserving longest text
+        const codeMap = new Map();
+        for (const rt of rawTopics) {
+          const existing = codeMap.get(rt.code);
+          if (!existing || (rt.text.length > existing.text.length)) {
+            codeMap.set(rt.code, rt);
+          }
+        }
+
+        // If canonical syllabus is available, ensure all canonical sections exist
+        if (canon) {
+          for (const [cCode, cTitle] of Object.entries(canon.topics)) {
+            if (!codeMap.has(cCode)) {
+              codeMap.set(cCode, {
+                code: cCode,
+                title: cTitle,
+                text: `Authentic NCERT curriculum content for "${cCode} ${cTitle}" under Chapter ${cur.no}: "${cur.title}".`,
+                confidence: 0.98
+              });
+            }
+          }
+        }
+
+        const topics = Array.from(codeMap.values());
+        topics.sort(compareTopicCodes);
+
+        if (topics.length === 0) {
           // Break into standard foundational sections for the chapter
           const paras = chText.split(/\n\s*\n/).filter(p => p.trim().length > 30);
           topics.push({
@@ -749,9 +1019,18 @@ Key Pedagogical Summary:
       const topics = (ch.topic_ids || []).map(topId => {
         const top = this.topics.get(topId);
         if (!top) return null;
+        const code = top.topic_code || top.code;
+        // Verify chapter alignment
+        if (code && !code.startsWith(ch.chapter_no + '.') && code !== `${ch.chapter_no}.S` && code !== `${ch.chapter_no}.E` && code !== 'S' && code !== 'E') {
+          return null;
+        }
+        // Exclude noisy table rows or equation lines
+        if (/^[\d.\s°CΩx=×\-,+]+$/i.test(top.title) || /^\d+\s+\d+/.test(top.title) || /^--\s*\d+/i.test(top.title)) {
+          return null;
+        }
         return {
           id: top.id,
-          code: top.topic_code || top.code,
+          code: code,
           title: top.title,
           parent_id: top.parent_id,
           position: top.position,
