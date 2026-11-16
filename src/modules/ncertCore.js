@@ -96,7 +96,8 @@ function build(ctx) {
 
   return {
     moduleId: MODULE.id,
-    title: isComp ? 'NCERT Core & Traps' : 'NCERT: Exercise, Examples & Exemplar',
+    title: 'NCERT Reading Engine',
+    subtitle: 'Textbook Ingestion, Chapter-wise Topics & Extracted Reading Content',
     mode: ctx.mode,
     track: ctx.track,
     empty: false,
