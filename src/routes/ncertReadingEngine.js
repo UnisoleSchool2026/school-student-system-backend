@@ -21,6 +21,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const ncertService = require('../services/ncertReadingEngineService');
+const aiStudyService = require('../services/ncertAiStudyService');
 
 // Use memory storage for uploaded PDFs
 const upload = multer({
@@ -167,6 +168,23 @@ router.get('/admin/topics/:topicId', (req, res) => {
     return res.json(topic);
   } catch (err) {
     return res.status(err.status || 404).json({ detail: err.message });
+  }
+});
+
+// ----------------------------------------------------------------------------
+// TOPIC AI STUDY AIDS: Short Notes, Important Bullets, and Quick Quiz
+// Features Two-Tier Persistent Disk & RAM Caching for Zero-Token Replay
+// ----------------------------------------------------------------------------
+router.get('/admin/topics/:topicId/ai-study', async (req, res) => {
+  try {
+    const topic = ncertService.getTopic(req.params.topicId);
+    const forceRefresh = req.query.force_refresh === 'true' || req.query.refresh === 'true';
+    const studyAid = await aiStudyService.getTopicAiStudy(topic, forceRefresh);
+    res.set('X-Cache', studyAid.cached ? 'HIT' : 'MISS');
+    res.set('X-Tokens-Used', studyAid.cached ? '0' : String(studyAid.token_usage?.total_tokens || 0));
+    return res.json(studyAid);
+  } catch (err) {
+    return res.status(err.status || 500).json({ detail: err.message });
   }
 });
 

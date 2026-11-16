@@ -1,0 +1,137 @@
+{
+  "topic_study_top_chap_book_c10_sci_2026_1_1": {
+    "topic_id": "top_chap_book_c10_sci_2026_1_1",
+    "topic_title": "Chemical Reactions and Chemical Equations",
+    "topic_code": "1.1",
+    "cached": false,
+    "cached_at": "2026-11-16T23:12:32.306Z",
+    "cache_hits": 2,
+    "llm_provider": "NCERT Curriculum Engine (Deterministic High-Yield)",
+    "token_usage": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0
+    },
+    "summary_notes": {
+      "overview": "A complete chemical equation represents the reactants, products and their physical states symbolically. A chemical reaction has occurred if there is a change in state, change in colour, evolution of a gas, or change in temperature. For example, when zinc granules are added to dilute sulphuric acid in a conical flask, bubbles of hydrogen gas are evolved and the flask becomes warm.",
+      "core_concepts": [
+        {
+          "title": "Foundational Principle",
+          "detail": "A complete chemical equation represents the reactants, products and their physical states symbolically."
+        },
+        {
+          "title": "Analytical Formulation",
+          "detail": "A chemical reaction has occurred if there is a change in state, change in colour, evolution of a gas, or change in temperature."
+        },
+        {
+          "title": "Curriculum Importance",
+          "detail": "For example, when zinc granules are added to dilute sulphuric acid in a conical flask, bubbles of hydrogen gas are evolved and the flask becomes warm."
+        }
+      ],
+      "key_definitions": [
+        {
+          "term": "Chemical Reactions and Chemical Equations",
+          "definition": "A complete chemical equation represents the reactants, products and their physical states symbolically."
+        }
+      ]
+    },
+    "bullet_points": {
+      "high_yield_takeaways": [
+        "Master the explicit definition of \"Chemical Reactions and Chemical Equations\" verbatim per standard NCERT terminology.",
+        "Ensure dimensional balance and standard SI units across all calculations.",
+        "Graph sketch questions and sign conventions carry dedicated step marks in CBSE board evaluations."
+      ],
+      "governing_formulas": [
+        {
+          "name": "Governing Relation 1",
+          "latex": "$\\text{Zn (s)} + \\text{H}_2\\text{SO}_4\\text{ (aq)} \\longrightarrow \\text{ZnSO}_4\\text{ (aq)} + \\text{H}_2\\text{ (g)} \\uparrow$",
+          "note": "Standard NCERT formulation"
+        }
+      ],
+      "exam_traps": [
+        {
+          "trap": "Confusing scalar addition with vector superposition",
+          "remedy": "Always resolve field or force vectors into perpendicular components before computing net magnitudes."
+        },
+        {
+          "trap": "Forgetting Cartesian sign convention in numerical substitution",
+          "remedy": "Establish origin and coordinate axes before applying governing formula."
+        }
+      ]
+    },
+    "quick_quiz": [
+      {
+        "id": "q_1.1_1",
+        "question": "According to the NCERT curriculum for \"Chemical Reactions and Chemical Equations\", which statement is conceptually accurate?",
+        "options": [
+          {
+            "key": "A",
+            "text": "A complete chemical equation represents the reactants, products and their physical states symbolically."
+          },
+          {
+            "key": "B",
+            "text": "The phenomenon violates universal conservation principles in closed systems."
+          },
+          {
+            "key": "C",
+            "text": "It is independent of physical boundary conditions and material permittivity."
+          },
+          {
+            "key": "D",
+            "text": "It can only be defined for macroscopic continuous media, failing at atomic scales."
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "Option A is correct: \"A complete chemical equation represents the reactants, products and their physical states symbolically.\". This is explicitly highlighted in the NCERT syllabus."
+      },
+      {
+        "id": "q_1.1_2",
+        "question": "What is the primary examination pitfall students encounter when solving problems on \"Chemical Reactions and Chemical Equations\"?",
+        "options": [
+          {
+            "key": "A",
+            "text": "Misidentifying vector orientations and skipping Cartesian sign conventions."
+          },
+          {
+            "key": "B",
+            "text": "Applying dimensional analysis to check formula validity."
+          },
+          {
+            "key": "C",
+            "text": "Using standard SI units for final calculations."
+          },
+          {
+            "key": "D",
+            "text": "Drawing a labelled schematic before substituting values."
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "Failing to respect vector directions and coordinate sign conventions is the most frequent deduction in board marking schemes."
+      },
+      {
+        "id": "q_1.1_3",
+        "question": "Which governing equation or relationship corresponds to \"Chemical Reactions and Chemical Equations\"?",
+        "options": [
+          {
+            "key": "A",
+            "text": "$\\text{Zn (s)} + \\text{H}_2\\text{SO}_4\\text{ (aq)} \\longrightarrow \\text{ZnSO}_4\\text{ (aq)} + \\text{H}_2\\text{ (g)} \\uparrow$"
+          },
+          {
+            "key": "B",
+            "text": "$PV = nRT^2$"
+          },
+          {
+            "key": "C",
+            "text": "$\\Delta x \\cdot \\Delta p < \\frac{h}{4\\pi}$"
+          },
+          {
+            "key": "D",
+            "text": "$v = u - 2at^2$"
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "The valid NCERT formulation for this concept is $\\text{Zn (s)} + \\text{H}_2\\text{SO}_4\\text{ (aq)} \\longrightarrow \\text{ZnSO}_4\\text{ (aq)} + \\text{H}_2\\text{ (g)} \\uparrow$."
+      }
+    ]
+  }
+}
