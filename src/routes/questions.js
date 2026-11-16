@@ -12,10 +12,18 @@ const {
   loadPersistedCustomQuestions,
   savePersistedCustomQuestions
 } = require('../services/questionInjectionService');
+const { classifyQuestion, matchesModeContext } = require('../services/canonicalContentService');
+
+// Dual-mode filter (?mode=BOARD&board=CBSE | ?mode=COMPETITIVE&stream=JEE). Only applied when `mode` is passed,
+// so existing callers keep their legacy `board` substring behaviour.
+function applyModeFilter(list, { mode, board, stream }, bankKeyHint) {
+  if (!mode || String(mode).toUpperCase() === 'ALL') return list;
+  return list.filter(q => matchesModeContext(classifyQuestion(q, bankKeyHint), { mode, board, stream }));
+}
 
 // GET all questions from bank (queries inMemoryStore.questions and all subjectBanks)
 router.get('/', (req, res) => {
-  const { subject, topic, board, grade, difficulty, search, limit, offset } = req.query;
+  const { subject, topic, board, grade, difficulty, search, limit, offset, mode, stream } = req.query;
   const banks = inMemoryStore.subjectBanks || {};
   const bankQuestions = Object.values(banks).flat();
 
@@ -43,7 +51,8 @@ router.get('/', (req, res) => {
   if (grade && grade !== 'ALL') {
     results = results.filter(q => String(q.grade) === String(grade));
   }
-  if (board && board !== 'ALL') {
+  results = applyModeFilter(results, { mode, board, stream });
+  if (board && board !== 'ALL' && !mode) {
     const bLower = board.toLowerCase();
     results = results.filter(q => 
       (q.curriculum_board && q.curriculum_board.toLowerCase().includes(bLower)) ||
@@ -271,7 +280,7 @@ router.post('/inject/preview', async (req, res) => {
     });
   } catch (err) {
     console.error('[API INJECT PREVIEW ERROR]', err.message);
-    const statusCode = err.message.includes('Discipline Lock') || err.message.includes('Access Denied') ? 403 : 500;
+    const statusCode = err.code === 'EXTRACTION_UNREADABLE' ? 422 : (err.message.includes('Discipline Lock') || err.message.includes('Access Denied') ? 403 : 500);
     res.status(statusCode).json({ success: false, error: err.message });
   }
 });
@@ -355,7 +364,7 @@ router.post('/inject', async (req, res) => {
     });
   } catch (err) {
     console.error('[API INJECT COMMIT ERROR]', err.message);
-    const statusCode = err.message.includes('Discipline Lock') || err.message.includes('Access Denied') ? 403 : 500;
+    const statusCode = err.code === 'EXTRACTION_UNREADABLE' ? 422 : (err.message.includes('Discipline Lock') || err.message.includes('Access Denied') ? 403 : 500);
     res.status(statusCode).json({ success: false, error: err.message });
   }
 });
@@ -684,8 +693,8 @@ router.get('/subject-banks/:subjectKey', (req, res) => {
       });
     }
 
-    const { chapter, difficulty, targetExam, grade } = req.query;
-    let filtered = [...tableData];
+    const { chapter, difficulty, targetExam, grade, mode, board, stream } = req.query;
+    let filtered = applyModeFilter([...tableData], { mode, board, stream }, targetKey);
 
     if (grade && grade !== 'ALL') {
       filtered = filtered.filter(q => String(q.grade) === String(grade));

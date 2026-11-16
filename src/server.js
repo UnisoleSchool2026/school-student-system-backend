@@ -25,6 +25,10 @@ const notificationsRouter = require('./routes/notifications');
 const assessmentsRouter = require('./routes/assessments');
 const curriculumRouter = require('./routes/curriculum');
 const voiceTutorRouter = require('./routes/voiceTutor');
+const tenantRouter = require('./routes/tenant');
+const contentRouter = require('./routes/content');
+const modulesRouter = require('./routes/modules');
+const teacherDppRouter = require('./routes/dpp');
 
 const app = express();
 const server = http.createServer(app);
@@ -131,6 +135,11 @@ app.use('/api/notifications', notificationsRouter);
 app.use('/api/assessments', assessmentsRouter);
 app.use('/api/curriculum', curriculumRouter);
 app.use('/api/voice-tutor', voiceTutorRouter);
+// Multi-tenant dual-mode (Board vs Competitive) registry, canonical content & workspace modules
+app.use('/api', tenantRouter);
+app.use('/api/content', contentRouter);
+app.use('/api/modules', modulesRouter);
+app.use('/api/dpp', teacherDppRouter);
 
 // Standalone Backend API Gateway Root
 app.get('/', (req, res) => {

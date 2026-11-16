@@ -17,6 +17,8 @@ const { generatePersonalizedRemedialAssignment, verifyStudentFormula } = require
 const { generateAssignmentDocxBuffer } = require('../services/docxExportService');
 const { ensureQuestionHasRichOptions } = require('../services/questionOptionEngine');
 const { quizTool, testTool, assignmentTool } = require('../services/pipelineTools');
+const { resolvePatternForAssessment, getNegativePenalty } = require('../services/examPatternRegistry');
+const subjectScope = require('../services/subjectScope');
 const {
   BOARD_BLUEPRINTS,
   generateBoardQuestionPaper,
@@ -31,22 +33,20 @@ const {
 router.get('/', (req, res) => {
   try {
     let list = inMemoryStore.assessments || [];
-    const { subject, subjectKey, section, classId, status } = req.query;
-    const sKey = (subjectKey || subject || '').toUpperCase().trim();
+    const { subject, subjectKey, teacherSubjectKey, section, classId, status } = req.query;
+    const sKey = (teacherSubjectKey || subjectKey || subject || '').toUpperCase().trim();
     if (sKey) {
-      list = list.filter(a => {
-        const aKey = (a.subjectKey || '').toUpperCase();
-        const aSub = (a.subject || '').toUpperCase();
-        return aKey === sKey || aSub === sKey || aSub.includes(sKey);
-      });
+      // Subject isolation: subject AND class/grade must belong to this teacher's scope
+      // (keeps Class 10 Maths and senior Maths apart, and Biology out of Non-Medical classes).
+      list = subjectScope.isKnownSubject(sKey)
+        ? list.filter(a => subjectScope.assessmentInScope(sKey, a))
+        : list.filter(a => (a.subjectKey || '').toUpperCase() === sKey || (a.subject || '').toUpperCase() === sKey);
     }
 
     const secFilter = (section || classId || '').trim().toLowerCase();
     if (secFilter) {
-      list = list.filter(a => {
-        const aSec = (a.section || a.targetClass || '').trim().toLowerCase();
-        return aSec === secFilter || aSec.includes(secFilter) || secFilter.includes(aSec);
-      });
+      // Exact class match only (a test without a class must never leak into every class).
+      list = list.filter(a => (a.section || a.targetClass || '').trim().toLowerCase() === secFilter);
     }
 
     const statusFilter = (status || '').toUpperCase().trim();
@@ -108,7 +108,7 @@ router.post('/', async (req, res) => {
     const {
       title,
       description = '',
-      teacherName = 'Er. Rajesh Kumar',
+      teacherName = '',
       grade = '10',
       section = 'Science-A',
       board = 'CBSE',
@@ -198,10 +198,14 @@ router.post('/:id/submit', async (req, res) => {
     let rawScore = 0;
     const examBoard = String(assessment.board || assessment.curriculum_board || '').toUpperCase();
     const isCompetitiveExam = examBoard.includes('JEE') || examBoard.includes('NEET');
+    // Negative marking comes from the Exam Pattern Template Registry (registry/templates/exam_patterns.json).
+    // An explicit assessment.negativeMarks still wins; the JEE/NEET string check is the last-resort fallback.
+    const examPattern = resolvePatternForAssessment(assessment);
+    const patternPenalty = getNegativePenalty(examPattern);
     const hasExplicitNeg = assessment.negativeMarks !== undefined && assessment.negativeMarks !== null;
     const negativePenalty = hasExplicitNeg
       ? Math.abs(Number(assessment.negativeMarks) || 0)
-      : (isCompetitiveExam ? 1.0 : 0.0);
+      : (patternPenalty !== null ? patternPenalty : (isCompetitiveExam ? 1.0 : 0.0));
     const totalMarks = Number(assessment.totalMarks) || (assessment.questions.length * 4);
     const defaultMarksPerQ = assessment.questions.length > 0
       ? Number((totalMarks / assessment.questions.length).toFixed(2))
@@ -370,6 +374,8 @@ router.post('/:id/submit', async (req, res) => {
         studentId,
         studentName,
         totalQuestions: assessment.questions.length,
+        examPatternId: examPattern ? examPattern.patternId : null,
+        negativeMarkingApplied: negativePenalty,
         totalScore,
         totalMarks,
         percentage,
@@ -690,6 +696,9 @@ router.post('/unit-test/generate-draft', (req, res) => {
       marksBreakdown = {},
       teacherName = 'Dr. Vikram Sharma'
     } = req.body;
+
+    const scopeError = subjectScope.checkTeacherWrite(req.body.teacherSubjectKey, { subjectKey: req.body.subjectKey || subject, section, grade });
+    if (scopeError) return res.status(scopeError.status).json({ success: false, error: scopeError.error });
 
     const count1M = Math.max(0, parseInt(marksBreakdown.count1M ?? 5, 10));
     const count2M = Math.max(0, parseInt(marksBreakdown.count2M ?? 3, 10));
@@ -1160,6 +1169,12 @@ router.post('/board-paper/generate', async (req, res) => {
       academicYear = '2025–26',
       customTitle = null
     } = req.body;
+
+    const scopeError = subjectScope.checkTeacherWrite(req.body.teacherSubjectKey, { subjectKey: subject, grade });
+    if (scopeError) return res.status(scopeError.status).json({ success: false, error: scopeError.error });
+    if (req.body.teacherSubjectKey && !subjectScope.allowedGrades(req.body.teacherSubjectKey).has(String(grade))) {
+      return res.status(403).json({ success: false, error: `Subject isolation: ${req.body.teacherSubjectKey} faculty does not teach Class ${grade}.` });
+    }
 
     const paper = generateBoardQuestionPaper({
       board,

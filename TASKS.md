@@ -29,6 +29,11 @@ This document tracks all engineering deliverables for the **HAPS-AI Scholar Assi
 | **TASK-19** | **Full Desktop & Mobile E2E Audit (14 Bug Fixes & Live Re-QA)** | Fixed Board Paper Class 12 Maths & 1M MCQ filtering, Voice Tutor `v1alpha` + neural fallback, safe TreeWalker KaTeX, `data-*` Student/Remedial clicks, WhatsApp sanitization & live `1440x900`/`360x800` Chrome verification. | Completed |
 | **TASK-20** | **Student AI Whiteboard Studio & Live Doubt Workspace** | Rebuilt `#tabStudentSmartboard` with Class/Subject/Topic filters & keyword search, playback/zoom/clear canvas controls, KaTeX step cards, Hinglish voice tutoring (`openai/gpt-oss-20b`), Ask-Any-Doubt studio, race guards, and `360x800` touch/layout parity. | Completed |
 | **TASK-21** | **Standalone CI/CD Pipelines & Security Automation** | Independent backend CI/CD pipelines (`.github/workflows/{ci,cd}.yml`) with Node 20, Postgres 16 service container, live server verification gate, Trivy/Gitleaks/CodeQL security scans, and Dependabot. | Completed |
+| **TASK-22** | **Multi-Tenant Dual-Mode Architecture (Board vs Competitive)** | Tenant JSON profiles, exam pattern template registry (drives scoring), workspace tab registry, canonical `curriculum_content` model, Module Registry (DPP, Roadmap, Cheat Sheets, NCERT Core, Rank Analytics), new `/api/tenant`, `/api/content`, `/api/modules` APIs and 3 new PostgreSQL tables. | Completed |
+| **TASK-23** | **Full-Project Audit: Content Isolation, Live Class Data & Seed Fixes** | Shared `subjectScope` service enforcing teacher subject/class scope on students, tests, analytics and test creation; student submissions endpoint; real class size in analytics; Class 10 Science seed and Class 10 Maths default-class fixes. | Completed |
+| **TASK-24** | **Mode Features per Diagram, Question Bank Filters, Working Question Injection & Unisole Logo** | Board/Competitive tabs per the mode diagram (NCERT tab in both, Scan Sheets Board-only, chapter-wise DPP, Board NCERT Exercise/Example/Exemplar); Create Test limited to the active grade; Question Bank filters built from data; honest question injection with answer-key picker; Unisole logo across the portal. | Completed |
+| **TASK-25** | **Frontend Redesign: Sky Blue & White, PC Top Tabs + Phone Bottom Tab Bar** | New theme (`css/unisole-theme.css`), app shell (`js/appShell.js`) mirroring each role's features as PC tabs and a phone bottom bar, light sign-in page, plain-language labels and decluttered screens; self-hosted fonts. AI Smartboard untouched. | Completed |
+| **TASK-26** | **Role Lock, Principal Live Dashboard, Teacher-Created DPPs** | Portal locked to the signed-in role (no Portal Views), principal read-only telemetry (`/api/analytics/principal-overview`), teacher DPP creation from bank / typed / PDF / photo with results (`/api/dpp`), student Practice tab, balanced bank answer keys. | Completed |
 
 ---
 
@@ -391,5 +396,46 @@ This document tracks all engineering deliverables for the **HAPS-AI Scholar Assi
 3. **Non-Blocking External Network Tests**: Isolating network-dependent synthetic voice services (`msedge-tts`) into dedicated jobs with `continue-on-error: true` protects CI stability against upstream third-party network outages.
 4. **Live Verification Gate before Deployment Approval**: Probing both API metadata (`/api/health`) and comprehensive domain features via `verify_staging.js` acts as an automated promotion gate before artifacts transition to production environments.
 5. **Container Security Scanning in CI**: Scanning Docker images with Trivy directly following the Buildx layer compilation catches vulnerable base image libraries before pushing to GHCR.
+
+---
+
+### TASK-22: Multi-Tenant Dual-Mode Architecture (Board vs Competitive)
+**Objective**: Let any school customise curriculum tracks, exam formats and available tools without code changes, following `multi-tenant-dual-mode-architecture.md`.
+
+**Core Deliverables**:
+1. Backend registry (`backend/src/registry/`): tenant profiles (`sch_unisole_001`, sample `sch_demo_board_only`), exam pattern templates (CBSE, HP Board, ICSE [no content], JEE Main, NEET UG), and the workspace tab registry with per-mode feature flags.
+2. Backend services and APIs: `tenantConfigService`, `examPatternRegistry` (now drives assessment negative marking), `canonicalContentService` (`curriculum_content` projection), Module Registry (`dpp`, `roadmap`, `cheatsheets`, `ncert_core`, `rank_analytics`), and `/api/tenant/*`, `/api/templates/*`, `/api/content`, `/api/modules/*`, plus `?mode=` filtering on `/api/questions`.
+3. Database: `schools`, `curriculum_content` (GIN lookup index), `dpp_attempts`, seed rows and `scripts/sync_curriculum_content.js`.
+4. Frontend: `js/dualModeEngine.js` + `css/dual-mode.css` header mode pill, track sub-selector, feature-flag tab filtering (Scan Paper Sheets hidden in Competitive), drawer Mode Tools and Module Workspace for teachers and students. AI Smartboard and `js/app.js` unchanged.
+5. Verification: `npm run test:dual-mode` (34 checks) in CI, PostgreSQL schema/sync check, headless Chrome QA at 1440x900 and 360x800.
+
+**Open follow-ups**: load ICSE content and blueprints; add native JEE Chemistry/Mathematics and NEET objective questions (current DPP pools are 1-2 questions for JEE Chemistry/Maths); persist DPP attempts to `dpp_attempts` when PostgreSQL is live; tune rank curves yearly from published results.
+
+#### 5 Technical Learning Points:
+1. **Configuration over Code**: Feature flags per mode in a tenant JSON profile let the same build serve a board-only day school and a JEE/NEET coaching wing; adding a school is adding a file.
+2. **One Canonical Content Model**: Tagging each question with `target_modes`, `board_targets` and `competitive_targets` avoids duplicate endpoints; a GIN index on the three arrays keeps mode/stream lookups indexed in PostgreSQL.
+3. **Pattern-Driven Scoring**: Resolving marking from an exam pattern registry (with explicit overrides first and a legacy fallback last) changes scoring rules without touching the evaluator.
+4. **Deterministic Daily Sets**: Seeding the DPP shuffle with date + school + track + subject gives every student in a class the same set, lets the server re-derive it on submit (tamper-proof), and survives restarts without storage.
+5. **Non-Invasive Frontend Extension**: The mode engine reads host state, reuses existing tab containers and drawer card styles, and stays hidden when the backend is unavailable, so a 25k-line `app.js` is extended without editing it.
+
+---
+
+### TASK-23: Full-Project Audit: Content Isolation, Live Class Data & Seed Fixes
+**Objective**: Find and fix everything not working across the whole project, keeping every user's content isolated (teachers see only their subject and classes, students only their class). AI Smartboard untouched.
+
+**Core Deliverables**:
+1. Audit tooling run: headless-Chrome explorer over all roles/tabs/buttons/dropdowns/modals, an end-to-end publish-submit-review flow, and an API isolation sweep for all 6 faculty.
+2. Backend `src/services/subjectScope.js` applied to `/api/curriculum/students`, `/api/assessments`, `/api/analytics/class-dashboard`, `/api/curriculum/generate-test`, `/api/assessments/unit-test/generate-draft`, `/api/assessments/board-paper/generate`; new `/api/analytics/student/:id/submissions`.
+3. Frontend live class sync replacing demo Recorded Tests / Assigned Tests / Rosters, real student Previous Tests, and removal of all cross-subject fallbacks.
+4. Seed data corrections (Class 10 Science test section and submissions; Class 10 Maths default class).
+
+**Open follow-ups**: replace native confirm/prompt dialogs with in-app modals; update the two stale tests (`test_teacher_auth_and_class_management.js`, `test_class10_sync_and_banks.js`) once the intended default classes are confirmed; real authentication (phone lookup only today).
+
+#### 5 Technical Learning Points:
+1. **One Scope Rule**: Deriving teacher scope from each class's `subjects` list in one service keeps every endpoint consistent; per-route string matching had drifted (e.g. Maths matching Class 10 Maths).
+2. **Never Fall Back Across Tenants of Data**: "show something rather than nothing" fallbacks were the main isolation leak; an empty state is the correct answer.
+3. **Validate Writes, Not Just Reads**: test creation must check both the teacher's scope and whether the class studies the subject.
+4. **Demo Data Hides Broken Flows**: hardcoded result tables made the app look complete while real submissions never reached teachers; wiring views to the backend exposed and fixed the flow.
+5. **Seed Integrity Matters for Isolation**: submissions pointing at students from another class silently leaked data into the wrong portals.
 
 ---
