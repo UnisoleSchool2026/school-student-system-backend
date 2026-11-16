@@ -2686,7 +2686,7 @@ const inMemoryStore = {
       id: 'asgn_10_sci_01',
       title: 'Class 10 Science: Light – Spherical Mirrors & Derivations',
       description: 'CBSE & HP Board standard diagnostic assessment covering mirror formula, sign conventions, and image formation.',
-      teacherName: 'Er. Rajesh Kumar',
+      teacherName: 'Er. Rakesh Thakur',
       grade: '10',
       section: '10-Science-A',
       board: 'CBSE',
@@ -4302,6 +4302,37 @@ try {
   }
 } catch (e) {
   console.warn('[DATABASE] Options enrichment notice:', e.message);
+}
+
+// Balance the answer key of bank MCQs. The bundled banks (and the option
+// synthesizer above) put the correct option first, so "always pick A" scored
+// 100%. Each bank MCQ gets a fixed, id-seeded order of its four options, so the
+// same question always shows the same order on every server and restart.
+// Teacher-added questions (ids containing "_inj_") keep the order the teacher gave.
+try {
+  const crypto = require('crypto');
+  const balanceOptions = q => {
+    if (!q || !q.id || String(q.id).includes('_inj_')) return;
+    const opts = Array.isArray(q.options_latex) ? q.options_latex : [];
+    if (opts.length !== 4 || opts.filter(o => o && o.is_correct).length !== 1) return;
+    const seed = crypto.createHash('sha1').update(String(q.id)).digest();
+    const order = [0, 1, 2, 3];
+    for (let n = 3; n > 0; n--) {
+      const r = seed[n] % (n + 1);
+      [order[n], order[r]] = [order[r], order[n]];
+    }
+    const keys = ['A', 'B', 'C', 'D'];
+    const next = order.map((from, idx) => Object.assign({}, opts[from], { key: keys[idx] }));
+    q.options_latex = next;
+    q.options = next;
+    const correct = next.find(o => o.is_correct);
+    q.correct_answer = correct.key;
+  };
+  Object.values(inMemoryStore.subjectBanks || {}).forEach(bank => {
+    if (Array.isArray(bank)) bank.forEach(balanceOptions);
+  });
+} catch (err) {
+  console.warn('[DATABASE] Could not balance bank option order:', err.message);
 }
 
 // Hydrate custom questions permanently stored on disk (e.g. from faculty injection studio)

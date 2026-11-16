@@ -108,7 +108,7 @@ router.post('/', async (req, res) => {
     const {
       title,
       description = '',
-      teacherName = 'Er. Rajesh Kumar',
+      teacherName = '',
       grade = '10',
       section = 'Science-A',
       board = 'CBSE',

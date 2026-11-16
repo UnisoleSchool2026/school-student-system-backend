@@ -28,6 +28,7 @@ const voiceTutorRouter = require('./routes/voiceTutor');
 const tenantRouter = require('./routes/tenant');
 const contentRouter = require('./routes/content');
 const modulesRouter = require('./routes/modules');
+const teacherDppRouter = require('./routes/dpp');
 
 const app = express();
 const server = http.createServer(app);
@@ -138,6 +139,7 @@ app.use('/api/voice-tutor', voiceTutorRouter);
 app.use('/api', tenantRouter);
 app.use('/api/content', contentRouter);
 app.use('/api/modules', modulesRouter);
+app.use('/api/dpp', teacherDppRouter);
 
 // Standalone Backend API Gateway Root
 app.get('/', (req, res) => {
