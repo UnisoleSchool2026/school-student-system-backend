@@ -298,7 +298,7 @@
     "topic_code": "1.1",
     "cached": false,
     "cached_at": "2026-11-17T04:47:53.396Z",
-    "cache_hits": 7,
+    "cache_hits": 11,
     "llm_provider": "NCERT Curriculum Engine (Deterministic High-Yield)",
     "token_usage": {
       "prompt_tokens": 0,
@@ -432,7 +432,7 @@
     "topic_title": "Introduction",
     "topic_code": "1.1",
     "cached": false,
-    "cached_at": "2026-11-17T07:04:19.466Z",
+    "cached_at": "2026-11-17T13:45:59.513Z",
     "cache_hits": 1,
     "llm_provider": "NCERT Curriculum Engine (Deterministic High-Yield)",
     "token_usage": {
@@ -714,7 +714,7 @@
     "topic_code": "1.1",
     "cached": false,
     "cached_at": "2026-11-17T06:05:00.315Z",
-    "cache_hits": 1,
+    "cache_hits": 2,
     "llm_provider": "Groq (openai/gpt-oss-20b)",
     "token_usage": {
       "queue_time": 1.200068943,
@@ -816,6 +816,956 @@
         ],
         "correct_answer": "D",
         "explanation": "Charge is a scalar that is conserved in any closed system, so option D is correct."
+      }
+    ]
+  },
+  "topic_study_top_chap_book_c43c69c2-4662-4397-bb3b-3f9c92b1e8bf_1_1": {
+    "topic_id": "top_chap_book_c43c69c2-4662-4397-bb3b-3f9c92b1e8bf_1_1",
+    "topic_title": "General Characteristics of Solid State",
+    "topic_code": "1.1",
+    "cached": false,
+    "cached_at": "2026-11-17T12:22:55.581Z",
+    "cache_hits": 1,
+    "llm_provider": "Groq (qwen/qwen3.8-27b)",
+    "token_usage": {
+      "queue_time": 0.049333276,
+      "prompt_tokens": 729,
+      "prompt_time": 0.059380403,
+      "completion_tokens": 1214,
+      "completion_time": 2.521286499,
+      "total_tokens": 1943,
+      "total_time": 2.580666902
+    },
+    "summary_notes": {
+      "overview": "Solids are rigid materials where particles are tightly packed in a fixed arrangement. They are classified based on how these particles are arranged, either in a regular pattern (crystalline) or a random one (amorphous).",
+      "core_concepts": [
+        {
+          "title": "Rigidity and Density",
+          "detail": "In solids, particles are held together by strong forces, making them rigid and dense. They have a definite shape and volume."
+        },
+        {
+          "title": "Crystalline Solids",
+          "detail": "These solids have particles arranged in a highly ordered, repeating 3D pattern. They have a sharp melting point and are anisotropic (properties vary by direction)."
+        },
+        {
+          "title": "Amorphous Solids",
+          "detail": "These solids have a short-range order but a random arrangement overall. They have a gradual melting range and are isotropic (properties are the same in all directions)."
+        }
+      ],
+      "key_definitions": [
+        {
+          "term": "Isotropic",
+          "definition": "A property that has the same value in all directions (e.g., refractive index in glass)."
+        },
+        {
+          "term": "Anisotropic",
+          "definition": "A property that has different values in different directions (e.g., electrical conductivity in graphite)."
+        },
+        {
+          "term": "Unit Cell",
+          "definition": "The smallest repeating unit of a crystal lattice that shows the full symmetry of the crystal structure."
+        }
+      ]
+    },
+    "bullet_points": {
+      "high_yield_takeaways": [
+        "Solids have a definite shape and volume because their particles are closely packed.",
+        "Crystalline solids have a sharp melting point, while amorphous solids soften over a range of temperatures.",
+        "Crystalline solids are anisotropic; amorphous solids are isotropic.",
+        "Examples of amorphous solids include glass, rubber, and plastics.",
+        "Examples of crystalline solids include NaCl, diamond, and quartz."
+      ],
+      "governing_formulas": [
+        {
+          "name": "Density of a Unit Cell",
+          "latex": "$\\rho = \\frac{Z \\times M}{N_A \\times a^3}$",
+          "note": "$Z$ is the number of atoms per unit cell, $M$ is molar mass, $N_A$ is Avogadro's number, and $a$ is the edge length."
+        }
+      ],
+      "exam_traps": [
+        {
+          "trap": "Confusing amorphous solids with liquids because they lack long-range order.",
+          "remedy": "Remember that amorphous solids are rigid and have a definite shape, unlike liquids which flow."
+        },
+        {
+          "trap": "Thinking all solids have a sharp melting point.",
+          "remedy": "Only crystalline solids have a sharp melting point. Amorphous solids melt over a range."
+        }
+      ]
+    },
+    "quick_quiz": [
+      {
+        "id": "q1",
+        "question": "Which of the following is a characteristic of amorphous solids?",
+        "options": [
+          {
+            "key": "A",
+            "text": "Sharp melting point"
+          },
+          {
+            "key": "B",
+            "text": "Long-range order"
+          },
+          {
+            "key": "C",
+            "text": "Isotropic nature"
+          },
+          {
+            "key": "D",
+            "text": "Anisotropic nature"
+          }
+        ],
+        "correct_answer": "C",
+        "explanation": "Amorphous solids have a random arrangement of particles, making their properties the same in all directions (isotropic). Crystalline solids are anisotropic."
+      },
+      {
+        "id": "q2",
+        "question": "Why do crystalline solids have a sharp melting point?",
+        "options": [
+          {
+            "key": "A",
+            "text": "They have weak intermolecular forces."
+          },
+          {
+            "key": "B",
+            "text": "They have a regular, repeating arrangement of particles."
+          },
+          {
+            "key": "C",
+            "text": "They are isotropic."
+          },
+          {
+            "key": "D",
+            "text": "They have a low density."
+          }
+        ],
+        "correct_answer": "B",
+        "explanation": "The regular, repeating arrangement means all particles are held with similar strength, so they all break free at the same temperature, leading to a sharp melting point."
+      },
+      {
+        "id": "q3",
+        "question": "Which of the following is an example of a crystalline solid?",
+        "options": [
+          {
+            "key": "A",
+            "text": "Glass"
+          },
+          {
+            "key": "B",
+            "text": "Rubber"
+          },
+          {
+            "key": "C",
+            "text": "Quartz"
+          },
+          {
+            "key": "D",
+            "text": "Plastic"
+          }
+        ],
+        "correct_answer": "C",
+        "explanation": "Quartz is a crystalline solid with a regular arrangement of silica tetrahedra. Glass, rubber, and plastic are amorphous solids."
+      }
+    ]
+  },
+  "topic_study_top_chap_book_c43c69c2-4662-4397-bb3b-3f9c92b1e8bf_2_1": {
+    "topic_id": "top_chap_book_c43c69c2-4662-4397-bb3b-3f9c92b1e8bf_2_1",
+    "topic_title": "Introduction",
+    "topic_code": "2.1",
+    "cached": false,
+    "cached_at": "2026-11-17T12:23:15.716Z",
+    "cache_hits": 1,
+    "llm_provider": "Groq (openai/gpt-oss-120b)",
+    "token_usage": {
+      "queue_time": 0.339364266,
+      "prompt_tokens": 879,
+      "prompt_time": 0.045471032,
+      "completion_tokens": 1132,
+      "completion_time": 2.389546667,
+      "total_tokens": 2011,
+      "total_time": 2.435017699,
+      "completion_tokens_details": {
+        "reasoning_tokens": 317
+      }
+    },
+    "summary_notes": {
+      "overview": "Solutions are mixtures where a solute is uniformly spread in a solvent. They are described by how much solute is present per amount of solvent or solution.",
+      "core_concepts": [
+        {
+          "title": "Types of solutions",
+          "detail": "Solutions can be solid, liquid or gaseous, and the solute may be a solid, liquid or gas."
+        },
+        {
+          "title": "Expressing concentration",
+          "detail": "Concentration tells how much solute is present. Common ways are mass percent, molarity ($M = \\frac{n}{V}$), and mole fraction ($X_{solute}=\\frac{n_{solute}}{n_{total}}$)."
+        }
+      ],
+      "key_definitions": [
+        {
+          "term": "Solute",
+          "definition": "The substance that is dissolved in a solution."
+        },
+        {
+          "term": "Solvent",
+          "definition": "The substance that does the dissolving; it is present in larger amount."
+        },
+        {
+          "term": "Molarity",
+          "definition": "Number of moles of solute per litre of solution."
+        },
+        {
+          "term": "Mass percent",
+          "definition": "Mass of solute divided by total mass of solution, multiplied by 100."
+        }
+      ]
+    },
+    "bullet_points": {
+      "high_yield_takeaways": [
+        "Molarity uses volume of the whole solution, not just the solvent.",
+        "Mass percent is useful when dealing with solid mixtures."
+      ],
+      "governing_formulas": [
+        {
+          "name": "Molarity",
+          "latex": "$M = \\frac{n_{solute}}{V_{solution}}$",
+          "note": "$n_{solute}$ in moles, $V_{solution}$ in litres."
+        },
+        {
+          "name": "Mass percent",
+          "latex": "$\\%\\,w/w = \\frac{m_{solute}}{m_{solution}}\\times 100$",
+          "note": "$m$ in grams."
+        },
+        {
+          "name": "Mole fraction",
+          "latex": "$X_{solute}=\\frac{n_{solute}}{n_{solute}+n_{solvent}}$",
+          "note": "Both $n$ values are in moles."
+        }
+      ],
+      "exam_traps": [
+        {
+          "trap": "Using solvent volume instead of solution volume for molarity.",
+          "remedy": "Always remember $V$ is the total volume after the solute is added."
+        },
+        {
+          "trap": "Confusing mass percent with percent by volume.",
+          "remedy": "Check the units: mass percent uses grams, volume percent uses millilitres or litres."
+        }
+      ]
+    },
+    "quick_quiz": [
+      {
+        "id": "q1",
+        "question": "What is the correct expression for molarity of a solution?",
+        "options": [
+          {
+            "key": "A",
+            "text": "$M = \\frac{n_{solute}}{V_{solution}}$"
+          },
+          {
+            "key": "B",
+            "text": "$M = \\frac{m_{solute}}{V_{solvent}}$"
+          },
+          {
+            "key": "C",
+            "text": "$M = \\frac{n_{solute}}{m_{solution}}$"
+          },
+          {
+            "key": "D",
+            "text": "$M = \\frac{m_{solute}}{m_{solvent}}$"
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "Molarity is defined as moles of solute per litre of the whole solution."
+      }
+    ]
+  },
+  "topic_study_top_chap_book_c43c69c2-4662-4397-bb3b-3f9c92b1e8bf_2_3": {
+    "topic_id": "top_chap_book_c43c69c2-4662-4397-bb3b-3f9c92b1e8bf_2_3",
+    "topic_title": "Id o",
+    "topic_code": "2.2.5",
+    "cached": false,
+    "cached_at": "2026-11-17T12:23:21.800Z",
+    "cache_hits": 1,
+    "llm_provider": "Groq (openai/gpt-oss-120b)",
+    "token_usage": {
+      "queue_time": 0.371153037,
+      "prompt_tokens": 1040,
+      "prompt_time": 0.06093356,
+      "completion_tokens": 1413,
+      "completion_time": 2.969967272,
+      "total_tokens": 2453,
+      "total_time": 3.030900832,
+      "completion_tokens_details": {
+        "reasoning_tokens": 358
+      }
+    },
+    "summary_notes": {
+      "overview": "Ideal solutions follow Raoult's law exactly, while non‑ideal solutions deviate due to molecular interactions. Colligative properties such as boiling‑point elevation help determine the molar mass of a solute.",
+      "core_concepts": [
+        {
+          "title": "Ideal Solution",
+          "detail": "In an ideal solution the vapor pressure of each component is proportional to its mole fraction: $P_i = X_i P_i^{\\text{pure}}$."
+        },
+        {
+          "title": "Non‑ideal Solution",
+          "detail": "Real solutions show positive or negative deviation from Raoult's law because of stronger or weaker intermolecular forces."
+        },
+        {
+          "title": "Colligative Property – Boiling‑Point Elevation",
+          "detail": "The rise in boiling point is given by $\\Delta T_b = K_b \\cdot m$, where $m = \\frac{n_{solute}}{\\text{mass of solvent (kg)}}$."
+        },
+        {
+          "title": "Molar Mass Determination",
+          "detail": "Re‑arranging the boiling‑point formula gives $M = \\frac{K_b \\cdot w_{solvent} \\cdot 1000}{\\Delta T_b \\cdot \\text{mass of solute}}$."
+        }
+      ],
+      "key_definitions": [
+        {
+          "term": "Raoult's Law",
+          "definition": "The vapor pressure of a component in an ideal solution equals its mole fraction times its pure‑component vapor pressure."
+        },
+        {
+          "term": "Mole Fraction ($X_i$)",
+          "definition": "The ratio of moles of component $i$ to total moles in the mixture."
+        },
+        {
+          "term": "Colligative Property",
+          "definition": "A property that depends only on the number of solute particles, not on their identity."
+        }
+      ]
+    },
+    "bullet_points": {
+      "high_yield_takeaways": [
+        "Ideal solutions obey $P_i = X_i P_i^{\\text{pure}}$; deviations signal non‑ideality.",
+        "Boiling‑point elevation uses $\\Delta T_b = K_b \\cdot m$ to find molar mass."
+      ],
+      "governing_formulas": [
+        {
+          "name": "Raoult's Law",
+          "latex": "$P_i = X_i P_i^{\\text{pure}}$",
+          "note": "$P_i$ = vapor pressure of component i, $X_i$ = mole fraction, $P_i^{\\text{pure}}$ = vapor pressure of pure i"
+        },
+        {
+          "name": "Boiling‑Point Elevation",
+          "latex": "$\\Delta T_b = K_b \\cdot m$",
+          "note": "$K_b$ = ebullioscopic constant, $m = \\frac{n_{solute}}{\\text{kg of solvent}}$"
+        },
+        {
+          "name": "Molar Mass from Boiling‑Point Elevation",
+          "latex": "$M = \\frac{K_b \\cdot w_{solvent} \\cdot 1000}{\\Delta T_b \\cdot m_{solute}}$",
+          "note": "$w_{solvent}$ = mass of solvent (g), $m_{solute}$ = mass of solute (g)"
+        }
+      ],
+      "exam_traps": [
+        {
+          "trap": "Using mass of solution instead of mass of solvent in $m$",
+          "remedy": "Always use the mass of the pure solvent when calculating molality."
+        },
+        {
+          "trap": "Confusing mole fraction with mass fraction",
+          "remedy": "Convert masses to moles first, then compute $X_i = \\frac{n_i}{\\sum n}$."
+        }
+      ]
+    },
+    "quick_quiz": [
+      {
+        "id": "q1",
+        "question": "Which expression correctly represents Raoult's law for component A in an ideal solution?",
+        "options": [
+          {
+            "key": "A",
+            "text": "$P_A = X_A \\; P_A^{\\text{pure}}$"
+          },
+          {
+            "key": "B",
+            "text": "$P_A = K_b \\; m$"
+          },
+          {
+            "key": "C",
+            "text": "$\\Delta T_b = K_b \\; X_A$"
+          },
+          {
+            "key": "D",
+            "text": "$M = \\frac{K_b \\; w_{solvent}}{\\Delta T_b}$"
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "Raoult's law states that the vapor pressure of a component equals its mole fraction times its pure‑component vapor pressure."
+      }
+    ]
+  },
+  "topic_study_top_chap_book_c43c69c2-4662-4397-bb3b-3f9c92b1e8bf_5_1": {
+    "topic_id": "top_chap_book_c43c69c2-4662-4397-bb3b-3f9c92b1e8bf_5_1",
+    "topic_title": "Introduction",
+    "topic_code": "5.1",
+    "cached": false,
+    "cached_at": "2026-11-17T12:24:27.425Z",
+    "cache_hits": 1,
+    "llm_provider": "Groq (qwen/qwen3.8-27b)",
+    "token_usage": {
+      "queue_time": 0.049430717,
+      "prompt_tokens": 742,
+      "prompt_time": 0.056017782,
+      "completion_tokens": 980,
+      "completion_time": 1.873113004,
+      "total_tokens": 1722,
+      "total_time": 1.929130786
+    },
+    "summary_notes": {
+      "overview": "Surface chemistry is the study of what happens at the boundary where two different phases meet, like a liquid and a gas. It is crucial because many important reactions and processes occur right at these surfaces.",
+      "core_concepts": [
+        {
+          "title": "Phases and Interfaces",
+          "detail": "A phase is a physically distinct part of a system (like solid, liquid, or gas). The interface is the boundary layer where two phases meet, such as the surface of water in air."
+        },
+        {
+          "title": "Heterogeneous vs. Homogeneous",
+          "detail": "Surface chemistry deals with heterogeneous systems, where the composition is not uniform throughout. This is different from homogeneous systems like a pure liquid."
+        },
+        {
+          "title": "Surface Energy",
+          "detail": "Molecules at the surface have higher energy than those inside the bulk because they are not surrounded by similar molecules on all sides. This leads to phenomena like surface tension."
+        }
+      ],
+      "key_definitions": [
+        {
+          "term": "Surface Chemistry",
+          "definition": "The branch of chemistry that studies the behavior of substances at the interface between two phases."
+        },
+        {
+          "term": "Interface",
+          "definition": "The boundary region where two different phases (e.g., solid-liquid, liquid-gas) come into contact."
+        }
+      ]
+    },
+    "bullet_points": {
+      "high_yield_takeaways": [
+        "Surface chemistry focuses on the **interface** between two phases.",
+        "It is a branch of **physical chemistry** dealing with heterogeneous systems.",
+        "Key phenomena include adsorption, catalysis, and colloids.",
+        "Molecules at the surface have unbalanced forces, leading to higher potential energy."
+      ],
+      "governing_formulas": [
+        {
+          "name": "Surface Tension (Conceptual)",
+          "latex": "$\\gamma = \\frac{F}{L}$",
+          "note": "$\\gamma$ is surface tension, $F$ is force, and $L$ is length. It represents the energy required to increase the surface area."
+        }
+      ],
+      "exam_traps": [
+        {
+          "trap": "Confusing surface chemistry with general solution chemistry.",
+          "remedy": "Remember: Surface chemistry is specifically about the **boundary** (interface), not the bulk of the solution."
+        },
+        {
+          "trap": "Thinking all chemical reactions happen in the bulk.",
+          "remedy": "Many important reactions (like catalysis) happen specifically **at the surface** of a solid."
+        }
+      ]
+    },
+    "quick_quiz": [
+      {
+        "id": "q1",
+        "question": "What is the primary focus of surface chemistry?",
+        "options": [
+          {
+            "key": "A",
+            "text": "The behavior of molecules in the bulk of a liquid"
+          },
+          {
+            "key": "B",
+            "text": "The behavior of substances at the interface between two phases"
+          },
+          {
+            "key": "C",
+            "text": "The study of pure gases only"
+          },
+          {
+            "key": "D",
+            "text": "The internal structure of solid crystals"
+          }
+        ],
+        "correct_answer": "B",
+        "explanation": "Surface chemistry specifically studies what happens at the boundary (interface) where two different phases, like liquid and gas, meet."
+      },
+      {
+        "id": "q2",
+        "question": "Why do molecules at the surface of a liquid have higher energy than those in the bulk?",
+        "options": [
+          {
+            "key": "A",
+            "text": "They are moving faster due to heat"
+          },
+          {
+            "key": "B",
+            "text": "They experience unbalanced intermolecular forces"
+          },
+          {
+            "key": "C",
+            "text": "They are lighter than bulk molecules"
+          },
+          {
+            "key": "D",
+            "text": "They are repelled by the container walls"
+          }
+        ],
+        "correct_answer": "B",
+        "explanation": "Bulk molecules are pulled equally in all directions by neighbors. Surface molecules are pulled inward and sideways but not outward, creating an imbalance and higher potential energy."
+      }
+    ]
+  },
+  "topic_study_top_chap_book_c43c69c2-4662-4397-bb3b-3f9c92b1e8bf_5_3": {
+    "topic_id": "top_chap_book_c43c69c2-4662-4397-bb3b-3f9c92b1e8bf_5_3",
+    "topic_title": "Catalysis",
+    "topic_code": "5.2",
+    "cached": false,
+    "cached_at": "2026-11-17T12:24:46.854Z",
+    "cache_hits": 1,
+    "llm_provider": "Groq (qwen/qwen3.8-27b)",
+    "token_usage": {
+      "queue_time": 0.054211586,
+      "prompt_tokens": 788,
+      "prompt_time": 0.057436931,
+      "completion_tokens": 1781,
+      "completion_time": 3.583437425,
+      "total_tokens": 2569,
+      "total_time": 3.640874356
+    },
+    "summary_notes": {
+      "overview": "Catalysis is the process where a substance called a catalyst speeds up a chemical reaction without being used up. Catalysts can be solids, liquids, or gases, and they work by lowering the energy barrier needed for the reaction to happen.",
+      "core_concepts": [
+        {
+          "title": "What is a Catalyst?",
+          "detail": "A catalyst is a substance that increases the rate of a chemical reaction but remains chemically unchanged at the end. It is not consumed in the reaction."
+        },
+        {
+          "title": "How Catalysts Work",
+          "detail": "Catalysts provide an alternative pathway for the reaction with a lower activation energy ($E_a$). This means more reactant particles have enough energy to react, speeding up the process."
+        },
+        {
+          "title": "Types of Catalysts",
+          "detail": "Catalysts are classified based on their physical state relative to the reactants. Homogeneous catalysts are in the same phase (e.g., liquid), while heterogeneous catalysts are in a different phase (e.g., solid catalyst with gas reactants)."
+        },
+        {
+          "title": "Enzymes as Biological Catalysts",
+          "detail": "Enzymes are biological catalysts found in living organisms. They are highly specific, meaning each enzyme usually catalyzes only one specific reaction (e.g., Urease breaks down urea)."
+        }
+      ],
+      "key_definitions": [
+        {
+          "term": "Catalysis",
+          "definition": "The process of increasing the rate of a chemical reaction by adding a catalyst."
+        },
+        {
+          "term": "Activation Energy ($E_a$)",
+          "definition": "The minimum energy required for reactants to transform into products. Catalysts lower this energy requirement."
+        },
+        {
+          "term": "Homogeneous Catalysis",
+          "definition": "Catalysis where the catalyst and reactants are in the same physical state (e.g., all liquids or all gases)."
+        },
+        {
+          "term": "Heterogeneous Catalysis",
+          "definition": "Catalysis where the catalyst and reactants are in different physical states (e.g., solid catalyst with gas reactants)."
+        }
+      ]
+    },
+    "bullet_points": {
+      "high_yield_takeaways": [
+        "A catalyst is not consumed in the reaction; it is regenerated at the end.",
+        "Catalysts lower the activation energy ($E_a$), not the enthalpy change ($\\Delta H$) of the reaction.",
+        "Heterogeneous catalysts often work by adsorption, where reactants stick to the catalyst surface.",
+        "Enzymes are highly specific and work best at specific temperatures and pH levels.",
+        "Common industrial catalysts include Iron ($Fe$) for ammonia synthesis and Platinum ($Pt$) for catalytic converters."
+      ],
+      "governing_formulas": [
+        {
+          "name": "Arrhenius Equation (Conceptual)",
+          "latex": "$k = A e^{-E_a/RT}$",
+          "note": "Shows that lowering activation energy ($E_a$) increases the rate constant ($k$), thus speeding up the reaction."
+        }
+      ],
+      "exam_traps": [
+        {
+          "trap": "Thinking the catalyst changes the equilibrium position.",
+          "remedy": "Remember: Catalysts speed up both forward and reverse reactions equally. They help reach equilibrium faster but do not change the final equilibrium constant ($K_{eq}$)."
+        },
+        {
+          "trap": "Confusing homogeneous and heterogeneous catalysts.",
+          "remedy": "Check the physical states. If the catalyst is a solid and reactants are gases/liquids, it's heterogeneous. If all are in the same phase (e.g., liquid), it's homogeneous."
+        },
+        {
+          "trap": "Assuming enzymes are consumed.",
+          "remedy": "Enzymes are biological catalysts. Like all catalysts, they are not used up; they are released unchanged after the reaction."
+        }
+      ]
+    },
+    "quick_quiz": [
+      {
+        "id": "q1",
+        "question": "What is the primary effect of a catalyst on a chemical reaction?",
+        "options": [
+          {
+            "key": "A",
+            "text": "It increases the activation energy ($E_a$)."
+          },
+          {
+            "key": "B",
+            "text": "It lowers the activation energy ($E_a$)."
+          },
+          {
+            "key": "C",
+            "text": "It changes the enthalpy change ($\\Delta H$) of the reaction."
+          },
+          {
+            "key": "D",
+            "text": "It shifts the equilibrium constant ($K_{eq}$) to the right."
+          }
+        ],
+        "correct_answer": "B",
+        "explanation": "Catalysts work by providing a new reaction pathway with a lower activation energy ($E_a$). This allows more particles to react successfully, speeding up the reaction. They do not change $\\Delta H$ or $K_{eq}$."
+      },
+      {
+        "id": "q2",
+        "question": "In the Haber process for ammonia synthesis, Iron ($Fe$) is used as a catalyst. What type of catalysis is this?",
+        "options": [
+          {
+            "key": "A",
+            "text": "Homogeneous, because $Fe$ is a metal."
+          },
+          {
+            "key": "B",
+            "text": "Heterogeneous, because $Fe$ is a solid and reactants are gases."
+          },
+          {
+            "key": "C",
+            "text": "Autocatalysis, because the product acts as a catalyst."
+          },
+          {
+            "key": "D",
+            "text": "Negative catalysis, because it slows down the reaction."
+          }
+        ],
+        "correct_answer": "B",
+        "explanation": "In the Haber process, Nitrogen ($N_2$) and Hydrogen ($H_2$) are gases, while Iron ($Fe$) is a solid. Since the catalyst and reactants are in different phases, it is heterogeneous catalysis."
+      },
+      {
+        "id": "q3",
+        "question": "Which of the following is an example of a biological catalyst?",
+        "options": [
+          {
+            "key": "A",
+            "text": "Platinum ($Pt$)"
+          },
+          {
+            "key": "B",
+            "text": "Sulfuric Acid ($H_2SO_4$)"
+          },
+          {
+            "key": "C",
+            "text": "Urease"
+          },
+          {
+            "key": "D",
+            "text": "Nickel ($Ni$)"
+          }
+        ],
+        "correct_answer": "C",
+        "explanation": "Urease is an enzyme found in living organisms that catalyzes the breakdown of urea. Enzymes are biological catalysts. Platinum, Sulfuric Acid, and Nickel are inorganic catalysts."
+      },
+      {
+        "id": "q4",
+        "question": "What happens to the equilibrium position of a reaction when a catalyst is added?",
+        "options": [
+          {
+            "key": "A",
+            "text": "It shifts to the right, producing more products."
+          },
+          {
+            "key": "B",
+            "text": "It shifts to the left, producing more reactants."
+          },
+          {
+            "key": "C",
+            "text": "It remains unchanged, but equilibrium is reached faster."
+          },
+          {
+            "key": "D",
+            "text": "It depends on the temperature of the reaction."
+          }
+        ],
+        "correct_answer": "C",
+        "explanation": "A catalyst speeds up both the forward and reverse reactions equally. Therefore, it does not change the equilibrium position or the equilibrium constant ($K_{eq}$); it only helps the system reach equilibrium more quickly."
+      }
+    ]
+  },
+  "topic_study_top_chap_book_c43c69c2-4662-4397-bb3b-3f9c92b1e8bf_5_2": {
+    "topic_id": "top_chap_book_c43c69c2-4662-4397-bb3b-3f9c92b1e8bf_5_2",
+    "topic_title": "Adsorption",
+    "topic_code": "5.1",
+    "cached": false,
+    "cached_at": "2026-11-17T12:25:06.376Z",
+    "cache_hits": 1,
+    "llm_provider": "NCERT Curriculum Engine (Deterministic High-Yield)",
+    "token_usage": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0
+    },
+    "summary_notes": {
+      "overview": "t t u s n Intext Questions t u n t s Intext Questions 5 2 C tal i",
+      "core_concepts": [
+        {
+          "title": "Core Concept",
+          "detail": "t t u s n Intext Questions t u n t s Intext Questions 5 2 C tal i"
+        },
+        {
+          "title": "Governing Formulation",
+          "detail": "Apply the standard relation $Adsorption$ systematically."
+        },
+        {
+          "title": "Key Takeaway",
+          "detail": "Mastering the definition and step-by-step rules of Adsorption ensures accurate problem solving."
+        }
+      ],
+      "key_definitions": [
+        {
+          "term": "Adsorption",
+          "definition": "t t u s n Intext Questions t u n t s Intext Questions 5 2 C tal i"
+        }
+      ]
+    },
+    "bullet_points": {
+      "high_yield_takeaways": [
+        "Identify the given conditions and variables in $Adsorption$.",
+        "Check algebraic signs, domain restrictions, and notation conventions before proceeding.",
+        "In board examinations, explicitly stating the initial definition or formula earns full step credit."
+      ],
+      "governing_formulas": [
+        {
+          "name": "Key Expression",
+          "latex": "$Adsorption$",
+          "note": "Fundamental definition and standard representation"
+        }
+      ],
+      "exam_traps": [
+        {
+          "trap": "Misapplying properties or skipping initial conditions in \"Adsorption\"",
+          "remedy": "Carefully verify the scope of the definition and apply simplification rules step-by-step."
+        },
+        {
+          "trap": "Computational slips during intermediate algebraic steps",
+          "remedy": "Re-check intermediate substitution and maintain consistent bracket notation throughout."
+        }
+      ]
+    },
+    "quick_quiz": [
+      {
+        "id": "q_5.1_1",
+        "question": "Which of the following statements about \"Adsorption\" is correct?",
+        "options": [
+          {
+            "key": "A",
+            "text": "t t u s n Intext Questions t u n t s Intext Questions 5 2 C tal i"
+          },
+          {
+            "key": "B",
+            "text": "It completely violates the foundational definitions of the subject."
+          },
+          {
+            "key": "C",
+            "text": "The result is universally zero under all possible mathematical conditions."
+          },
+          {
+            "key": "D",
+            "text": "It cannot be evaluated or applied to any valid problem instances."
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "Option A is correct: \"t t u s n Intext Questions t u n t s Intext Questions 5 2 C tal i\"."
+      },
+      {
+        "id": "q_5.1_2",
+        "question": "What is the most common error to avoid when working with \"Adsorption\"?",
+        "options": [
+          {
+            "key": "A",
+            "text": "Overlooking boundary conditions, domain constraints, or sign conventions."
+          },
+          {
+            "key": "B",
+            "text": "Writing down the governing definition and checking each step carefully."
+          },
+          {
+            "key": "C",
+            "text": "Verifying intermediate calculations before arriving at the final result."
+          },
+          {
+            "key": "D",
+            "text": "Labeling variables clearly and stating the final conclusion."
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "Failing to check initial constraints, domain limits, or sign conventions is the most frequent student mistake."
+      },
+      {
+        "id": "q_5.1_3",
+        "question": "Which fundamental representation or formula is associated with \"Adsorption\"?",
+        "options": [
+          {
+            "key": "A",
+            "text": "$Adsorption$"
+          },
+          {
+            "key": "B",
+            "text": "$0 = 1$"
+          },
+          {
+            "key": "C",
+            "text": "$\\infty - \\infty = 0$"
+          },
+          {
+            "key": "D",
+            "text": "$\\frac{0}{0} = 1$"
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "Option A ($Adsorption$) represents the valid formulation for this section."
+      }
+    ]
+  },
+  "topic_study_top_chap_book_c43c69c2-4662-4397-bb3b-3f9c92b1e8bf_2_5": {
+    "topic_id": "top_chap_book_c43c69c2-4662-4397-bb3b-3f9c92b1e8bf_2_5",
+    "topic_title": "Solubility",
+    "topic_code": "2.3",
+    "cached": false,
+    "cached_at": "2026-11-17T13:27:11.726Z",
+    "cache_hits": 1,
+    "llm_provider": "NCERT Curriculum Engine (Deterministic High-Yield)",
+    "token_usage": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0
+    },
+    "summary_notes": {
+      "overview": "t u n n xt Q s Intext Questions m e p Example 2.4 S l i Solution S l i Solution\n\n2.4\n\na u Vapour e r u e Pressure of iqu iqu Liquid Liquid ion Solutions ion Solutions e e t s o Intext Questions E\n\n. a l Example 2.5 Sol t Solution t Sol Solution\n\n2.2.5",
+      "core_concepts": [
+        {
+          "title": "Core Concept",
+          "detail": "t u n n xt Q s Intext Questions m e p Example 2.4 S l i Solution S l i Solution\n\n2.4\n\na u Vapour e r u e Pressure of iqu iqu Liquid Liquid ion Solutions ion Solutions e e t s o Intext Questions E\n\n."
+        },
+        {
+          "title": "Governing Formulation",
+          "detail": "a l Example 2.5 Sol t Solution t Sol Solution\n\n2.2.5"
+        },
+        {
+          "title": "Key Takeaway",
+          "detail": "Mastering the definition and step-by-step rules of Solubility ensures accurate problem solving."
+        }
+      ],
+      "key_definitions": [
+        {
+          "term": "Solubility",
+          "definition": "t u n n xt Q s Intext Questions m e p Example 2.4 S l i Solution S l i Solution\n\n2.4\n\na u Vapour e r u e Pressure of iqu iqu Liquid Liquid ion Solutions ion Solutions e e t s o Intext Questions E\n\n."
+        }
+      ]
+    },
+    "bullet_points": {
+      "high_yield_takeaways": [
+        "Identify the given conditions and variables in $Solubility$.",
+        "Check algebraic signs, domain restrictions, and notation conventions before proceeding.",
+        "In board examinations, explicitly stating the initial definition or formula earns full step credit."
+      ],
+      "governing_formulas": [
+        {
+          "name": "Key Expression",
+          "latex": "$Solubility$",
+          "note": "Fundamental definition and standard representation"
+        }
+      ],
+      "exam_traps": [
+        {
+          "trap": "Misapplying properties or skipping initial conditions in \"Solubility\"",
+          "remedy": "Carefully verify the scope of the definition and apply simplification rules step-by-step."
+        },
+        {
+          "trap": "Computational slips during intermediate algebraic steps",
+          "remedy": "Re-check intermediate substitution and maintain consistent bracket notation throughout."
+        }
+      ]
+    },
+    "quick_quiz": [
+      {
+        "id": "q_2.3_1",
+        "question": "Which of the following statements about \"Solubility\" is correct?",
+        "options": [
+          {
+            "key": "A",
+            "text": "t u n n xt Q s Intext Questions m e p Example 2.4 S l i Solution S l i Solution\n\n2.4\n\na u Vapour e r u e Pressure of iqu iqu Liquid Liquid ion Solutions ion Solutions e e t s o Intext Questions E\n\n."
+          },
+          {
+            "key": "B",
+            "text": "It completely violates the foundational definitions of the subject."
+          },
+          {
+            "key": "C",
+            "text": "The result is universally zero under all possible mathematical conditions."
+          },
+          {
+            "key": "D",
+            "text": "It cannot be evaluated or applied to any valid problem instances."
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "Option A is correct: \"t u n n xt Q s Intext Questions m e p Example 2.4 S l i Solution S l i Solution\n\n2.4\n\na u Vapour e r u e Pressure of iqu iqu Liquid Liquid ion Solutions ion Solutions e e t s o Intext Questions E\n\n.\"."
+      },
+      {
+        "id": "q_2.3_2",
+        "question": "What is the most common error to avoid when working with \"Solubility\"?",
+        "options": [
+          {
+            "key": "A",
+            "text": "Overlooking boundary conditions, domain constraints, or sign conventions."
+          },
+          {
+            "key": "B",
+            "text": "Writing down the governing definition and checking each step carefully."
+          },
+          {
+            "key": "C",
+            "text": "Verifying intermediate calculations before arriving at the final result."
+          },
+          {
+            "key": "D",
+            "text": "Labeling variables clearly and stating the final conclusion."
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "Failing to check initial constraints, domain limits, or sign conventions is the most frequent student mistake."
+      },
+      {
+        "id": "q_2.3_3",
+        "question": "Which fundamental representation or formula is associated with \"Solubility\"?",
+        "options": [
+          {
+            "key": "A",
+            "text": "$Solubility$"
+          },
+          {
+            "key": "B",
+            "text": "$0 = 1$"
+          },
+          {
+            "key": "C",
+            "text": "$\\infty - \\infty = 0$"
+          },
+          {
+            "key": "D",
+            "text": "$\\frac{0}{0} = 1$"
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "Option A ($Solubility$) represents the valid formulation for this section."
       }
     ]
   }

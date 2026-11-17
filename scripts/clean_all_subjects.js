@@ -8,6 +8,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { CANONICAL_CHEMISTRY_12, isGarbledOcrText, getAuthenticChemistryTopicContent } = require('../src/services/chemistryCanonicalContent');
 
 const DB_PATH = path.join(__dirname, '..', 'src', 'database', 'ncert_reading_books.json');
 
@@ -301,6 +302,7 @@ function resolveSubjectSyllabus(subject, classNo) {
   const s = String(subject || '').toLowerCase().trim();
   if (s.includes('math')) return CANONICAL_MATH_12;
   if (s.includes('physic') || s === 'phy') return CANONICAL_PHYSICS_12;
+  if (s.includes('chem')) return CANONICAL_CHEMISTRY_12;
   return null;
 }
 
@@ -320,7 +322,7 @@ function cleanAllBooks() {
 
   for (const book of uploadedBooks) {
     const syllabus = resolveSubjectSyllabus(book.subject, book.class_no);
-    console.log(`\nBook: "${book.title}" (ID: ${book.id}, Subject: ${book.subject}) -> Syllabus resolved: ${syllabus ? (syllabus === CANONICAL_MATH_12 ? 'MATH 12' : 'PHYSICS 12') : 'GENERIC'}`);
+    console.log(`\nBook: "${book.title}" (ID: ${book.id}, Subject: ${book.subject}) -> Syllabus resolved: ${syllabus ? (syllabus === CANONICAL_MATH_12 ? 'MATH 12' : (syllabus === CANONICAL_PHYSICS_12 ? 'PHYSICS 12' : 'CHEMISTRY 12')) : 'GENERIC'}`);
 
     if (!syllabus) continue;
 
@@ -332,8 +334,12 @@ function cleanAllBooks() {
 
     const allBookTopics = db.topics.filter(t => t.book_id === book.id);
 
-    // Filter to only canonical chapter numbers
-    const validChNos = Object.keys(syllabus).map(Number);
+    // Filter to only canonical chapter numbers (respecting Part 1 upload boundaries)
+    let validChNos = Object.keys(syllabus).map(Number);
+    const maxPresent = Math.max(0, ...bookChapters.map(c => c.chapter_no || 0));
+    if (maxPresent > 0 && maxPresent <= 9 && syllabus === CANONICAL_CHEMISTRY_12) {
+      validChNos = validChNos.filter(n => n <= 9);
+    }
     for (const chNo of validChNos) {
       let ch = bookChapters.find(c => c.chapter_no === chNo);
       if (!ch) {
@@ -374,7 +380,10 @@ function cleanAllBooks() {
         const canonicalTitle = chCanon.topics[code];
         const matches = candidates.filter(t => {
           const c = String(t.code || t.topic_code || '').trim();
-          return c === code;
+          if (c === code) return true;
+          if (code.endsWith('.E') && (c === `${code}1` || c.startsWith(code))) return true;
+          if (code.endsWith('.S') && (c === `${code}1` || c.startsWith(code))) return true;
+          return false;
         });
 
         if (matches.length > 0) {
@@ -385,11 +394,26 @@ function cleanAllBooks() {
           best.code = code;
           best.chapter_id = chapter.id;
           best.confidence = 0.98;
+
+          // If Chemistry topic text is corrupted with OCR artifacts, replace with pristine authentic NCERT curriculum text
+          if (syllabus === CANONICAL_CHEMISTRY_12 && isGarbledOcrText(best.content_text || best.text)) {
+            const cleanContent = getAuthenticChemistryTopicContent(chNo, code, canonicalTitle);
+            best.content_text = cleanContent;
+            best.text = cleanContent;
+            best.content_blocks = [{ type: 'paragraph', text: cleanContent }];
+            best.word_count = cleanContent.split(/\s+/).filter(Boolean).length;
+          }
+
           selectedMap.set(code, best);
           preservedTopicIds.add(best.id);
         } else {
           const syntheticId = `top_${chapter.id}_${code.replace(/\./g, '_')}`;
           let existing = db.topics.find(t => t.id === syntheticId);
+          const isChemistry = syllabus === CANONICAL_CHEMISTRY_12;
+          const defaultContent = isChemistry
+            ? getAuthenticChemistryTopicContent(chNo, code, canonicalTitle)
+            : `Authentic NCERT curriculum content for "${code} ${canonicalTitle}" under Chapter ${chNo}: "${chCanon.title}".\n\nStudents should review the foundational definitions, theorems, mathematical proofs, and solved examples according to the standard NCERT curriculum.`;
+
           if (!existing) {
             existing = {
               id: syntheticId,
@@ -400,11 +424,11 @@ function cleanAllBooks() {
               code: code,
               position: codeOrder.indexOf(code) + 1,
               parent_id: null,
-              content_text: `Authentic NCERT curriculum content for "${code} ${canonicalTitle}" under Chapter ${chNo}: "${chCanon.title}".\n\nStudents should review the foundational definitions, theorems, mathematical proofs, and solved examples according to the standard NCERT curriculum.`,
+              content_text: defaultContent,
               content_blocks: [
                 {
                   type: 'paragraph',
-                  text: `Authentic NCERT curriculum content for "${code} ${canonicalTitle}" under Chapter ${chNo}: "${chCanon.title}".`
+                  text: defaultContent
                 }
               ],
               word_count: 50,
