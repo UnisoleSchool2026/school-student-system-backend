@@ -167,6 +167,8 @@ function toCanonical(q, bankKey) {
     competitive_source: competitiveSource,
     content_type: classifyContentType(q, yearTags),
     is_ncert: /NCERT/.test(String(q.question_source || q.source_category || '').toUpperCase()) || /NCERT|EXEMPLAR/.test(String(q.pyq_appearance || '').toUpperCase()),
+    content_hash: q.contentHash || q.content_hash || null,
+    status: q.status || 'APPROVED',
     question_format: format || 'UNSPECIFIED',
     is_objective: isObjective,
     question_latex: q.question_latex || '',
@@ -234,9 +236,14 @@ function matchesModeContext(rec, { mode, board, stream } = {}) {
 function query(filters = {}) {
   const {
     mode, board, stream, subjectKey, subjectKeys, grade, chapter, contentType, difficulty,
-    yearTag, search, objectiveOnly, ncertOnly, limit, offset
+    yearTag, search, objectiveOnly, ncertOnly, limit, offset, status = 'APPROVED'
   } = filters;
   let results = getIndex().records.filter(r => matchesModeContext(r, { mode, board, stream }));
+
+  // Non-negotiable lifecycle invariant: Only APPROVED questions are returned by default
+  if (status && status !== 'ALL') {
+    results = results.filter(r => (r.status || 'APPROVED') === status);
+  }
 
   if (subjectKey && subjectKey !== 'ALL') {
     const sk = examPatterns.normalizeKey(subjectKey);

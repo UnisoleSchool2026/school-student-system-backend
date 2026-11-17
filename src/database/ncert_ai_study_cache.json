@@ -298,7 +298,7 @@
     "topic_code": "1.1",
     "cached": false,
     "cached_at": "2026-11-17T04:47:53.396Z",
-    "cache_hits": 5,
+    "cache_hits": 7,
     "llm_provider": "NCERT Curriculum Engine (Deterministic High-Yield)",
     "token_usage": {
       "prompt_tokens": 0,
@@ -432,7 +432,7 @@
     "topic_title": "Introduction",
     "topic_code": "1.1",
     "cached": false,
-    "cached_at": "2026-11-17T04:48:14.542Z",
+    "cached_at": "2026-11-17T07:04:19.466Z",
     "cache_hits": 1,
     "llm_provider": "NCERT Curriculum Engine (Deterministic High-Yield)",
     "token_usage": {
@@ -705,6 +705,117 @@
         ],
         "correct_answer": "A",
         "explanation": "By definition, $(a,b)\\in R$ means $a\\,R\\,b$. The relation does not automatically include $(b,a)$."
+      }
+    ]
+  },
+  "topic_study_top_chap_book_c12_phy_2026_1_1": {
+    "topic_id": "top_chap_book_c12_phy_2026_1_1",
+    "topic_title": "Fundamentals of Electric Charge & Coulomb's Law",
+    "topic_code": "1.1",
+    "cached": false,
+    "cached_at": "2026-11-17T06:05:00.315Z",
+    "cache_hits": 1,
+    "llm_provider": "Groq (openai/gpt-oss-20b)",
+    "token_usage": {
+      "queue_time": 1.200068943,
+      "prompt_tokens": 837,
+      "prompt_time": 0.059884152,
+      "completion_tokens": 965,
+      "completion_time": 1.375695324,
+      "total_tokens": 1802,
+      "total_time": 1.435579476,
+      "completion_tokens_details": {
+        "reasoning_tokens": 304
+      }
+    },
+    "summary_notes": {
+      "overview": "Electric charge is a tiny, quantised property of particles that can be positive or negative. Like charges push each other away, while opposite charges pull together.",
+      "core_concepts": [
+        {
+          "title": "Electric Charge",
+          "detail": "Charge is a scalar quantity that can be positive (protons) or negative (electrons). It is always a multiple of the elementary charge $e = 1.602\times10^{-19},\text{C}$, written as $q = ne$ where $n$ is an integer."
+        },
+        {
+          "title": "Coulomb’s Law",
+          "detail": "The force between two point charges is proportional to the product of their charges and inversely proportional to the square of the distance between them: $F = k,dfrac{|q_1q_2|}{r^2}$, where $k = 8.99\times10^9,\text{N m}^2\text{/C}^2$."
+        }
+      ],
+      "key_definitions": [
+        {
+          "term": "Elementary charge",
+          "definition": "The smallest unit of electric charge, carried by an electron or a proton."
+        },
+        {
+          "term": "Like charges",
+          "definition": "Two charges of the same sign that repel each other."
+        },
+        {
+          "term": "Unlike charges",
+          "definition": "Two charges of opposite sign that attract each other."
+        },
+        {
+          "term": "Quantised",
+          "definition": "Charge can only exist in whole multiples of the elementary charge."
+        },
+        {
+          "term": "Conserved",
+          "definition": "The total charge in an isolated system never changes."
+        }
+      ]
+    },
+    "bullet_points": {
+      "high_yield_takeaways": [
+        "Charge is always an integer multiple of $e$.",
+        "Like charges repel, unlike charges attract.",
+        "Charge is conserved in any closed system."
+      ],
+      "governing_formulas": [
+        {
+          "name": "Charge quantisation",
+          "latex": "$q = ne$",
+          "note": "$n$ is an integer, $e$ is the elementary charge."
+        },
+        {
+          "name": "Coulomb’s law",
+          "latex": "$F = k\\dfrac{|q_1q_2|}{r^2}$",
+          "note": "$k = 8.99\\times10^9\\,\\text{N m}^2\\text{/C}^2$, $r$ is the separation."
+        }
+      ],
+      "exam_traps": [
+        {
+          "trap": "Mixing up the sign of charge with its magnitude",
+          "remedy": "Always write the sign separately from the magnitude, e.g., $q = +3e$ or $q = -2e$."
+        },
+        {
+          "trap": "Forgetting the $r^2$ term in Coulomb’s law",
+          "remedy": "Remember the force falls off with the square of the distance."
+        }
+      ]
+    },
+    "quick_quiz": [
+      {
+        "id": "q1",
+        "question": "Which of the following is true about electric charge?",
+        "options": [
+          {
+            "key": "A",
+            "text": "Like charges attract each other."
+          },
+          {
+            "key": "B",
+            "text": "Unlike charges repel each other."
+          },
+          {
+            "key": "C",
+            "text": "Charge is a vector quantity."
+          },
+          {
+            "key": "D",
+            "text": "Charge is always conserved in an isolated system."
+          }
+        ],
+        "correct_answer": "D",
+        "explanation": "Charge is a scalar that is conserved in any closed system, so option D is correct."
       }
     ]
   }

@@ -11,6 +11,8 @@ const path = require('path');
 const { inMemoryStore } = require('../config/database');
 const { sanitizeLatexString, sanitizeOptionFormula, sanitizeQuestionPayload } = require('./llmQuestionEngine');
 const { CURRICULUM_TAXONOMY } = require('./curriculumTaxonomy');
+const examPatterns = require('./examPatternRegistry');
+const { computeContentHash, validateQuestionInvariants, STATUS_LIFECYCLE } = require('./questionCanonicalSchema');
 
 // Universal Web Standards Polyfills for Serverless Node (Vercel / AWS Lambda)
 if (typeof globalThis.DOMMatrix === 'undefined') {
@@ -303,13 +305,27 @@ function cleanAndParseJson(raw) {
   if (!raw || typeof raw !== 'string') return null;
   let text = raw.trim();
 
+  // Strip Markdown code fences
   if (text.startsWith('```')) {
     text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
   }
 
   try {
-    return JSON.parse(text);
+    const parsed = JSON.parse(text);
+    if (Array.isArray(parsed)) {
+      return { questions: parsed };
+    }
+    return parsed;
   } catch (e) {
+    // Try matching JSON array: [ ... ]
+    const arrMatch = text.match(/\[\s*\{[\s\S]*\}\s*\]/);
+    if (arrMatch) {
+      try {
+        const arr = JSON.parse(arrMatch[0]);
+        if (Array.isArray(arr)) return { questions: arr };
+      } catch (eArr) { }
+    }
+    // Try matching JSON object: { ... }
     const match = text.match(/\{[\s\S]*\}/);
     if (match) {
       try {
@@ -504,42 +520,49 @@ function parseRawTextLocally({ rawText = '', targetSubject = 'Physics', category
   const lines = normalizedRaw.split('\n');
   const questionsMap = new Map();
   let currentQ = null;
-  let isEnglish = true;
   let hasNumberedStructure = false;
 
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i].trim();
     if (!rawLine) continue;
 
-    // Detect question header e.g. "1. A particle...", "Q1. ...", "Question 1: ..."
-    const qMatch = rawLine.match(/^(?:Q(?:uestion)?\.?\s*)?([0-9]{1,4})[\.:\)]\s+(.*)$/i);
+    // Filter out header/footer/section boilerplate
+    if (/^(?:SECTION\s+[A-E]|खण्ड\s+[क-ङ]|Questions?\s+\d+\s+to\s+\d+|General\s+Instructions|P\.?T\.?O\.?|Page\s+\d+|~\s*\d+[\/\d]*\s*~|नोट\s*NOTE|Time\s*Allowed|Maximum\s*Marks)/i.test(rawLine)) {
+      continue;
+    }
+
+    // Detect question header e.g. "1. A particle...", "Q1. ...", "Question 1: ...", "1)", "1.\n"
+    const qMatch = rawLine.match(/^(?:Q(?:uestion)?\.?\s*)?([0-9]{1,4})(?:[\.:\)]|\s+|$)\s*(.*)$/i);
     if (qMatch) {
       const qNum = parseInt(qMatch[1], 10);
-      const rest = qMatch[2].trim();
-      const isEngLine = /^[A-Za-z]/.test(rest) || /[a-zA-Z]{3,}/.test(rest);
+      const rest = (qMatch[2] || '').trim();
 
-      if (isEngLine && qNum >= 1 && qNum <= 1000) {
+      if (qNum >= 1 && qNum <= 1000) {
         currentQ = qNum;
-        isEnglish = true;
         hasNumberedStructure = true;
-        questionsMap.set(currentQ, [rawLine]);
-        continue;
-      } else if (!isEngLine) {
-        isEnglish = false;
+        if (!questionsMap.has(currentQ)) {
+          questionsMap.set(currentQ, []);
+        }
+
+        // Clean Devanagari Hindi text from header line if mixed
+        const cleanRest = rest.replace(/[\u0900-\u097F]+/g, '').trim();
+        if (cleanRest && (/[a-zA-Z]/.test(cleanRest) || /[\$\\\=\+\-\*\/\(\)]/.test(cleanRest))) {
+          questionsMap.get(currentQ).push(cleanRest);
+        }
         continue;
       }
     }
 
-    if (currentQ && isEnglish) {
-      // Filter out header/footer boilerplate
-      if (rawLine.includes('~55/3/1~') || rawLine.includes('P.T.O.') || rawLine.includes('•') || rawLine.includes('खण्ड') || rawLine.includes('नोट NOTE') || rawLine.includes('General Instructions')) {
-        continue;
+    if (currentQ) {
+      // Ignore lines containing only Devanagari Hindi characters without English words
+      const isDevanagariOnly = /[\u0900-\u097F]/.test(rawLine) && !/[a-zA-Z]{2,}/.test(rawLine);
+      if (isDevanagariOnly) continue;
+
+      // Filter out pure Devanagari prefixes in mixed lines, keeping English LaTeX, math & options
+      const cleanLine = rawLine.replace(/[\u0900-\u097F]+/g, '').trim();
+      if (cleanLine) {
+        questionsMap.get(currentQ).push(cleanLine);
       }
-      if (/^(?:Q(?:uestion)?\.?\s*)?([0-9]{1,4})[\.:\)]\s+[^\x00-\x7F]/.test(rawLine)) {
-        isEnglish = false;
-        continue;
-      }
-      questionsMap.get(currentQ).push(rawLine);
     }
   }
 
@@ -593,19 +616,24 @@ function parseRawTextLocally({ rawText = '', targetSubject = 'Physics', category
  * Multimodal extraction using Google Gemini
  */
 async function callGeminiMultimodal({ apiKey, mediaData, mimeType, promptText }) {
-  const models = ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'];
+  const models = ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.5-flash'];
   let lastError = null;
 
   let cleanData = mediaData;
+  let detectedMime = mimeType || 'image/jpeg';
   if (cleanData.includes(';base64,')) {
-    cleanData = cleanData.split(';base64,')[1];
+    const parts = cleanData.split(';base64,');
+    if (parts[0].startsWith('data:')) {
+      detectedMime = parts[0].replace('data:', '').trim();
+    }
+    cleanData = parts[1];
   }
 
   for (const model of models) {
     try {
       const cleanModel = model.replace(/^models\//, '');
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout guard
+      const timeoutId = setTimeout(() => controller.abort(), 35000); // 35s timeout guard for vision models
 
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${apiKey}`;
 
@@ -619,7 +647,7 @@ async function callGeminiMultimodal({ apiKey, mediaData, mimeType, promptText })
               parts: [
                 {
                   inlineData: {
-                    mimeType: mimeType || 'image/jpeg',
+                    mimeType: detectedMime || 'image/jpeg',
                     data: cleanData
                   }
                 },
@@ -645,7 +673,11 @@ async function callGeminiMultimodal({ apiKey, mediaData, mimeType, promptText })
       }
 
       const json = await response.json();
-      const rawText = json.candidates[0].content.parts[0].text;
+      const candidate = json.candidates?.[0];
+      if (!candidate || !candidate.content?.parts?.[0]?.text) {
+        throw new Error(`Gemini Multimodal ${model} returned empty candidate parts.`);
+      }
+      const rawText = candidate.content.parts[0].text;
       return cleanAndParseJson(rawText);
     } catch (err) {
       lastError = err;
@@ -660,13 +692,13 @@ async function callGeminiMultimodal({ apiKey, mediaData, mimeType, promptText })
  * Text extraction using Groq Cloud API with LPU acceleration
  */
 async function callGroqTextExtraction({ apiKey, systemPrompt, userPrompt }) {
-  const models = ['openai/gpt-oss-20b', 'qwen/qwen3.8-27b', 'llama-3.3-70b-versatile'];
+  const models = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'];
   let lastError = null;
 
   for (const model of models) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s timeout
 
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -682,7 +714,7 @@ async function callGroqTextExtraction({ apiKey, systemPrompt, userPrompt }) {
           ],
           response_format: { type: 'json_object' },
           temperature: 0.2,
-          max_tokens: 3000
+          max_tokens: 3500
         }),
         signal: controller.signal
       });
@@ -695,7 +727,7 @@ async function callGroqTextExtraction({ apiKey, systemPrompt, userPrompt }) {
       }
 
       const json = await response.json();
-      const content = json.choices[0].message.content;
+      const content = json.choices?.[0]?.message?.content;
       return cleanAndParseJson(content);
     } catch (err) {
       lastError = err;
@@ -833,6 +865,7 @@ CRITICAL MULTI-QUESTION AUTO-CATEGORIZATION DIRECTIVES:
   }
 
   // 2. Image Mode: Use Gemini Multimodal
+  let lastMultimodalError = null;
   if (mode === 'image' && mediaData && geminiKey) {
     try {
       console.log(`[INJECTION SERVICE] Processing multimodal IMAGE via Gemini Flash...`);
@@ -843,10 +876,18 @@ CRITICAL MULTI-QUESTION AUTO-CATEGORIZATION DIRECTIVES:
         mimeType: mimeType || 'image/jpeg',
         promptText: prompt
       });
-      if (extracted && ((Array.isArray(extracted.questions) && extracted.questions.length > 0) || extracted.question_latex)) {
+      if (extracted && (
+        Array.isArray(extracted) ||
+        (Array.isArray(extracted.questions) && extracted.questions.length > 0) ||
+        (Array.isArray(extracted.items) && extracted.items.length > 0) ||
+        extracted.question_latex ||
+        extracted.question ||
+        extracted.questionText
+      )) {
         return normalizeExtractedPayload(extracted, targetSubject, grade, category);
       }
     } catch (err) {
+      lastMultimodalError = err;
       console.warn(`[INJECTION SERVICE] Multimodal AI processing failed: ${err.message}. Falling back to text/local parsing.`);
     }
   }
@@ -862,7 +903,14 @@ CRITICAL MULTI-QUESTION AUTO-CATEGORIZATION DIRECTIVES:
           systemPrompt: systemInstructions,
           userPrompt
         });
-        if (groqResult && (groqResult.questions || groqResult.question_latex)) {
+        if (groqResult && (
+          Array.isArray(groqResult) ||
+          (Array.isArray(groqResult.questions) && groqResult.questions.length > 0) ||
+          (Array.isArray(groqResult.items) && groqResult.items.length > 0) ||
+          groqResult.question_latex ||
+          groqResult.question ||
+          groqResult.questionText
+        )) {
           return normalizeExtractedPayload(groqResult, targetSubject, grade, category);
         }
       } catch (err) {
@@ -880,8 +928,16 @@ CRITICAL MULTI-QUESTION AUTO-CATEGORIZATION DIRECTIVES:
           systemPrompt: systemInstructions,
           userPrompt
         });
-        if (gemResult && gemResult.data && (gemResult.data.questions || gemResult.data.question_latex)) {
-          return normalizeExtractedPayload(gemResult.data, targetSubject, grade, category);
+        const gData = gemResult?.data;
+        if (gData && (
+          Array.isArray(gData) ||
+          (Array.isArray(gData.questions) && gData.questions.length > 0) ||
+          (Array.isArray(gData.items) && gData.items.length > 0) ||
+          gData.question_latex ||
+          gData.question ||
+          gData.questionText
+        )) {
+          return normalizeExtractedPayload(gData, targetSubject, grade, category);
         }
       } catch (err) {
         console.warn(`[INJECTION SERVICE] Gemini text processing failed: ${err.message}.`);
@@ -893,11 +949,11 @@ CRITICAL MULTI-QUESTION AUTO-CATEGORIZATION DIRECTIVES:
   // Say so instead of inventing a placeholder question.
   if (!rawText || !rawText.trim()) {
     const why = mode === 'image'
-      ? (geminiKey ? 'The AI vision service could not read questions from this image.' : 'Reading questions from an image needs the AI vision service (GEMINI_API_KEY), which is not configured on this server.')
+      ? (geminiKey ? `The AI vision service could not extract readable questions from this image${lastMultimodalError ? ` (${lastMultimodalError.message})` : ''}.` : 'Reading questions from an image needs the AI vision service (GEMINI_API_KEY), which is not configured on this server.')
       : mode === 'pdf'
         ? 'No text could be read from this PDF (it may be a scanned image).' + (geminiKey ? '' : ' Scanned PDFs need the AI vision service (GEMINI_API_KEY).')
         : 'No question text was provided.';
-    const err = new Error(`${why} Paste the question text in "Paste Text" mode instead.`);
+    const err = new Error(`${why} Please paste the question text in "Paste Text" mode instead.`);
     err.code = 'EXTRACTION_UNREADABLE';
     throw err;
   }
@@ -924,9 +980,13 @@ function normalizeExtractedPayload(data, targetSubject = 'Physics', grade = '12'
   if (!data || typeof data !== 'object') return data;
 
   let rawList = [];
-  if (Array.isArray(data.questions) && data.questions.length > 0) {
+  if (Array.isArray(data)) {
+    rawList = data;
+  } else if (Array.isArray(data.questions) && data.questions.length > 0) {
     rawList = data.questions;
-  } else if (data.question_latex) {
+  } else if (Array.isArray(data.items) && data.items.length > 0) {
+    rawList = data.items;
+  } else if (data.question_latex || data.questionText || data.question) {
     rawList = [data];
   } else {
     rawList = [data];
@@ -1009,9 +1069,41 @@ function buildInjectedAppearance(category, q = {}, subjectUpper = '') {
   }
 }
 
-function commitQuestionToStore({ structuredQuestion, teacher, targetSubject, grade = '12', category = 'CBSE_PYQ', mode = 'text', persistImmediately = true }) {
+function commitQuestionToStore({ structuredQuestion, teacher, targetSubject, grade = '12', category = 'CBSE_PYQ', mode = 'text', examMode, examTrack, persistImmediately = true }) {
   const sUpper = (targetSubject || '').toUpperCase();
   const isC10 = String(grade) === '10';
+
+  const normMode = String(examMode || structuredQuestion.mode || structuredQuestion.target_modes?.[0] || '').trim().toUpperCase();
+  const normTrack = examPatterns.normalizeKey(examTrack || structuredQuestion.track || structuredQuestion.curriculum_board || structuredQuestion.board || structuredQuestion.stream || '');
+
+  // Non-negotiable: Mode and track are strictly required. Never default silently.
+  if (!normMode || !['BOARD', 'COMPETITIVE'].includes(normMode)) {
+    const err = new Error('Ingestion Error: Mode ("BOARD" or "COMPETITIVE") is strictly required to commit question.');
+    err.status = 400;
+    err.code = 'MODE_REQUIRED';
+    throw err;
+  }
+  if (!normTrack) {
+    const err = new Error(`Ingestion Error: Track (board or stream) is strictly required for ${normMode} mode.`);
+    err.status = 400;
+    err.code = 'TRACK_REQUIRED';
+    throw err;
+  }
+
+  let targetModes = [normMode];
+  let boardTargets = [];
+  let competitiveTargets = [];
+  let targetExam = '';
+  let curriculumBoard = normTrack;
+
+  if (normMode === 'BOARD') {
+    boardTargets = [normTrack];
+    targetExam = isC10 ? `${normTrack}_CLASS_10` : `${normTrack}_BOARD`;
+  } else if (normMode === 'COMPETITIVE') {
+    const compTrack = normTrack.startsWith('JEE') ? 'JEE_MAIN' : (normTrack === 'NEET' ? 'NEET' : normTrack);
+    competitiveTargets = [compTrack];
+    targetExam = compTrack === 'NEET' ? 'NEET_UG' : 'JEE_MAIN';
+  }
 
   let bankKey = 'senior_physics';
   if (isC10) {
@@ -1031,8 +1123,28 @@ function commitQuestionToStore({ structuredQuestion, teacher, targetSubject, gra
   const uniqueId = `${prefix}${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
   const chapterName = structuredQuestion.chapter_name || structuredQuestion.chapter || 'Core Chapter';
-  const marks = Number(structuredQuestion.marks_weightage || 3);
+  const marks = normMode === 'BOARD' ? Number(structuredQuestion.marks_weightage || structuredQuestion.marks || 3) : null;
   const difficulty = structuredQuestion.difficulty || 'MEDIUM';
+
+  // Compute deterministic content hash for idempotency and duplicate prevention
+  const contentHash = computeContentHash({
+    question_latex: structuredQuestion.question_latex,
+    options_latex: structuredQuestion.options_latex || structuredQuestion.options,
+    marks: marks || 0
+  });
+
+  // Deduplication check: Do not re-insert identical questions
+  const existingQuestions = inMemoryStore.subjectBanks?.[bankKey] || [];
+  const existingDup = existingQuestions.find(q => q && (q.contentHash === contentHash || q.content_hash === contentHash));
+  if (existingDup) {
+    console.log(`[INJECTION SERVICE] Duplicate question detected (hash: ${contentHash.slice(0, 12)}..., id: ${existingDup.id}). Skipping insertion.`);
+    return {
+      question: existingDup,
+      duplicate: true,
+      targetBank: bankKey,
+      totalBankCount: existingQuestions.length
+    };
+  }
 
   const auditInfo = {
     faculty_id: teacher.id || 'fac_unknown',
@@ -1044,33 +1156,62 @@ function commitQuestionToStore({ structuredQuestion, teacher, targetSubject, gra
     timestamp: new Date().toISOString()
   };
 
+  const isSubjectiveFormat = ['SHORT_ANSWER', 'LONG_DERIVATION', 'CASE_BASED', 'NUMERICAL', 'SUBJECTIVE_DERIVATION']
+    .some(f => (structuredQuestion.question_format || '').toUpperCase().includes(f));
+
+  let finalOptions = Array.isArray(structuredQuestion.options_latex) && structuredQuestion.options_latex.length > 0
+    ? structuredQuestion.options_latex.map(o => ({ ...o }))
+    : [];
+
+  if (isSubjectiveFormat) {
+    finalOptions = [];
+  } else if (finalOptions.length > 0 && finalOptions.length < 4) {
+    const keys = ['A', 'B', 'C', 'D'];
+    const usedKeys = new Set(finalOptions.map(o => (o.key || '').toUpperCase()));
+    for (const k of keys) {
+      if (finalOptions.length >= 4) break;
+      if (!usedKeys.has(k)) {
+        finalOptions.push({
+          key: k,
+          latex: `$\\text{None of the above}$`,
+          is_correct: false,
+          distractor_trap: null
+        });
+        usedKeys.add(k);
+      }
+    }
+  }
+
   const rawQuestion = {
     id: uniqueId,
+    contentHash: contentHash,
+    status: structuredQuestion.status || STATUS_LIFECYCLE.APPROVED,
     grade: String(grade),
     subject: targetSubject,
     subjectKey: sUpper,
     stream: isC10 ? 'FOUNDATION' : (sUpper.includes('BIO') ? 'MEDICAL' : 'COMMON_SENIOR'),
-    // Board categories stay board-only; only "Competitive" injections are tagged JEE / NEET.
-    target_exam: category === 'COMPETITIVE_OTHER'
-      ? (/NEET/i.test(String(structuredQuestion.exam_tag || '')) || (!/JEE/i.test(String(structuredQuestion.exam_tag || '')) && sUpper.includes('BIO')) ? 'NEET_UG' : 'JEE_MAIN')
-      : (isC10 ? 'CBSE_CLASS_10' : 'CBSE_BOARD'),
+    target_modes: targetModes,
+    board_targets: boardTargets,
+    competitive_targets: competitiveTargets,
+    target_exam: targetExam,
     chapter_name: chapterName,
     chapter: chapterName,
     topic: structuredQuestion.topic || chapterName,
     subtopic: structuredQuestion.subtopic || 'Core Derivation',
-    curriculum_board: isC10 ? 'CBSE_CLASS_10' : 'CBSE',
+    curriculum_board: curriculumBoard,
     source_category: category,
     question_source: category,
     pyq_appearance: buildInjectedAppearance(category, structuredQuestion, sUpper),
     difficulty: difficulty,
-    question_format: structuredQuestion.question_format || 'MCQ_SINGLE',
-    benchmark_time_seconds: Number(structuredQuestion.benchmark_time_seconds) || marks * 45,
+    question_format: isSubjectiveFormat ? (structuredQuestion.question_format || 'SHORT_ANSWER') : (finalOptions.length >= 2 ? 'MCQ_SINGLE' : 'SHORT_ANSWER'),
+    benchmark_time_seconds: Number(structuredQuestion.benchmark_time_seconds) || (marks ? marks * 45 : 120),
     marks_weightage: marks,
+    marks: marks,
     question_latex: structuredQuestion.question_latex,
-    options_latex: structuredQuestion.options_latex || [],
-    options: structuredQuestion.options_latex || [],
-    correct_answer_latex: structuredQuestion.correct_answer_latex || (structuredQuestion.options_latex?.find(o => o.is_correct)?.latex) || '',
-    correct_answer: (structuredQuestion.options_latex?.find(o => o.is_correct)?.key) || structuredQuestion.correct_answer || null,
+    options_latex: finalOptions,
+    options: finalOptions,
+    correct_answer_latex: structuredQuestion.correct_answer_latex || (finalOptions.find(o => o.is_correct)?.latex) || '',
+    correct_answer: (finalOptions.find(o => o.is_correct)?.key) || structuredQuestion.correct_answer || null,
     solution_latex: structuredQuestion.solution_latex || '',
     socratic_hints: structuredQuestion.socratic_hints || [],
     step_rubric: structuredQuestion.step_rubric || [],
@@ -1084,6 +1225,9 @@ function commitQuestionToStore({ structuredQuestion, teacher, targetSubject, gra
     injection_mode: mode,
     imported_at: new Date().toISOString()
   };
+
+  // Enforce canonical invariant validation
+  validateQuestionInvariants(rawQuestion);
 
   const finalQuestion = sanitizeQuestionPayload(rawQuestion);
 
@@ -1179,7 +1323,7 @@ function savePersistedCustomQuestions(newQuestions = []) {
 /**
  * Commits a batch of auto-categorized questions into the repository
  */
-function commitBatchQuestionsToStore({ questions = [], teacher, targetSubject, grade = '12', category = 'CBSE_PYQ', mode = 'text' }) {
+function commitBatchQuestionsToStore({ questions = [], teacher, targetSubject, grade = '12', category = 'CBSE_PYQ', mode = 'text', examMode, examTrack }) {
   if (!Array.isArray(questions) || questions.length === 0) {
     throw new Error('Expected a non-empty array of questions to commit.');
   }
@@ -1198,6 +1342,8 @@ function commitBatchQuestionsToStore({ questions = [], teacher, targetSubject, g
       grade,
       category,
       mode,
+      examMode,
+      examTrack,
       persistImmediately: false
     });
     committedQuestions[i] = res.question;

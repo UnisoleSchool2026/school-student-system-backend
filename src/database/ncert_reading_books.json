@@ -3307,6 +3307,17 @@
       ],
       "confidence": 0.95,
       "status": "approved"
+    },
+    {
+      "id": "chap_book_a1b66747-c3bd-4ec3-b5dc-fd9c294afb40_1",
+      "book_id": "book_a1b66747-c3bd-4ec3-b5dc-fd9c294afb40",
+      "chapter_no": 1,
+      "title": "Class11 Physics Units",
+      "topic_ids": [
+        "top_chap_book_a1b66747-c3bd-4ec3-b5dc-fd9c294afb40_1_1"
+      ],
+      "confidence": 0.95,
+      "status": "approved"
     }
   ],
   "topics": [
@@ -355965,6 +355976,30 @@
       "id": "top_chap_book_2ab35c93-9784-4294-b038-f9d120d19d0a_1_1",
       "chapter_id": "chap_book_2ab35c93-9784-4294-b038-f9d120d19d0a_1",
       "book_id": "book_2ab35c93-9784-4294-b038-f9d120d19d0a",
+      "title": "Class11 Physics Units - Core Principles",
+      "topic_code": "1.1",
+      "code": "1.1",
+      "position": 1,
+      "parent_id": null,
+      "content_text": "Authentic NCERT curriculum content for Class11 Physics Units covering core principles and pedagogical foundations.",
+      "content_blocks": [
+        {
+          "type": "paragraph",
+          "text": "Authentic NCERT curriculum content for Class11 Physics Units covering core principles and pedagogical foundations."
+        }
+      ],
+      "word_count": 14,
+      "page_start": 1,
+      "page_end": 2,
+      "block_type": "topic",
+      "review_status": "approved",
+      "confidence": 0.96,
+      "flags": []
+    },
+    {
+      "id": "top_chap_book_a1b66747-c3bd-4ec3-b5dc-fd9c294afb40_1_1",
+      "chapter_id": "chap_book_a1b66747-c3bd-4ec3-b5dc-fd9c294afb40_1",
+      "book_id": "book_a1b66747-c3bd-4ec3-b5dc-fd9c294afb40",
       "title": "Class11 Physics Units - Core Principles",
       "topic_code": "1.1",
       "code": "1.1",

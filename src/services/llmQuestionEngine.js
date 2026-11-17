@@ -342,7 +342,7 @@ async function callGroqApi({ apiKey, systemPrompt, userPrompt }) {
  */
 async function callGeminiApi({ apiKey, systemPrompt, userPrompt }) {
   const start = Date.now();
-  const geminiModels = ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'];
+  const geminiModels = ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.5-flash'];
   let lastError = null;
 
   for (const model of geminiModels) {
