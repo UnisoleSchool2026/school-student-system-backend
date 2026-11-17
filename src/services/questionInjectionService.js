@@ -1156,6 +1156,32 @@ function commitQuestionToStore({ structuredQuestion, teacher, targetSubject, gra
     timestamp: new Date().toISOString()
   };
 
+  const isSubjectiveFormat = ['SHORT_ANSWER', 'LONG_DERIVATION', 'CASE_BASED', 'NUMERICAL', 'SUBJECTIVE_DERIVATION']
+    .some(f => (structuredQuestion.question_format || '').toUpperCase().includes(f));
+
+  let finalOptions = Array.isArray(structuredQuestion.options_latex) && structuredQuestion.options_latex.length > 0
+    ? structuredQuestion.options_latex.map(o => ({ ...o }))
+    : [];
+
+  if (isSubjectiveFormat) {
+    finalOptions = [];
+  } else if (finalOptions.length > 0 && finalOptions.length < 4) {
+    const keys = ['A', 'B', 'C', 'D'];
+    const usedKeys = new Set(finalOptions.map(o => (o.key || '').toUpperCase()));
+    for (const k of keys) {
+      if (finalOptions.length >= 4) break;
+      if (!usedKeys.has(k)) {
+        finalOptions.push({
+          key: k,
+          latex: `$\\text{None of the above}$`,
+          is_correct: false,
+          distractor_trap: null
+        });
+        usedKeys.add(k);
+      }
+    }
+  }
+
   const rawQuestion = {
     id: uniqueId,
     contentHash: contentHash,
@@ -1177,15 +1203,15 @@ function commitQuestionToStore({ structuredQuestion, teacher, targetSubject, gra
     question_source: category,
     pyq_appearance: buildInjectedAppearance(category, structuredQuestion, sUpper),
     difficulty: difficulty,
-    question_format: structuredQuestion.question_format || (structuredQuestion.options_latex?.length >= 2 ? 'MCQ_SINGLE' : 'SHORT_ANSWER'),
+    question_format: isSubjectiveFormat ? (structuredQuestion.question_format || 'SHORT_ANSWER') : (finalOptions.length >= 2 ? 'MCQ_SINGLE' : 'SHORT_ANSWER'),
     benchmark_time_seconds: Number(structuredQuestion.benchmark_time_seconds) || (marks ? marks * 45 : 120),
     marks_weightage: marks,
     marks: marks,
     question_latex: structuredQuestion.question_latex,
-    options_latex: structuredQuestion.options_latex || [],
-    options: structuredQuestion.options_latex || [],
-    correct_answer_latex: structuredQuestion.correct_answer_latex || (structuredQuestion.options_latex?.find(o => o.is_correct)?.latex) || '',
-    correct_answer: (structuredQuestion.options_latex?.find(o => o.is_correct)?.key) || structuredQuestion.correct_answer || null,
+    options_latex: finalOptions,
+    options: finalOptions,
+    correct_answer_latex: structuredQuestion.correct_answer_latex || (finalOptions.find(o => o.is_correct)?.latex) || '',
+    correct_answer: (finalOptions.find(o => o.is_correct)?.key) || structuredQuestion.correct_answer || null,
     solution_latex: structuredQuestion.solution_latex || '',
     socratic_hints: structuredQuestion.socratic_hints || [],
     step_rubric: structuredQuestion.step_rubric || [],

@@ -243,8 +243,10 @@ async function runTests() {
       marks_weightage: 4,
       difficulty: 'HARD',
       options_latex: [
-        { key: 'A', latex: '10 rad/s^2', is_correct: true },
-        { key: 'B', latex: '5 rad/s^2', is_correct: false }
+        { key: 'A', latex: '$10\\,\\text{rad/s}^2$', is_correct: true },
+        { key: 'B', latex: '$5\\,\\text{rad/s}^2$', is_correct: false },
+        { key: 'C', latex: '$2.5\\,\\text{rad/s}^2$', is_correct: false },
+        { key: 'D', latex: '$15\\,\\text{rad/s}^2$', is_correct: false }
       ]
     },
     teacher,

@@ -1303,13 +1303,25 @@
     "options_latex": [
       {
         "key": "A",
-        "latex": "Compare the charge-to-mass ratio of the two particles A and B. Show the",
+        "latex": "$\\text{only } P$",
         "is_correct": false,
         "distractor_trap": null
       },
       {
         "key": "B",
-        "latex": "Which of the two particles is likely to be a proton if the other is an alpha",
+        "latex": "$\\text{only } Q$",
+        "is_correct": true,
+        "distractor_trap": null
+      },
+      {
+        "key": "C",
+        "latex": "$\\text{only } P \\text{ and } Q$",
+        "is_correct": false,
+        "distractor_trap": null
+      },
+      {
+        "key": "D",
+        "latex": "$\\text{only } Q \\text{ and } R$",
         "is_correct": false,
         "distractor_trap": null
       }
@@ -1317,13 +1329,25 @@
     "options": [
       {
         "key": "A",
-        "latex": "Compare the charge-to-mass ratio of the two particles A and B. Show the",
+        "latex": "$\\text{only } P$",
         "is_correct": false,
         "distractor_trap": null
       },
       {
         "key": "B",
-        "latex": "Which of the two particles is likely to be a proton if the other is an alpha",
+        "latex": "$\\text{only } Q$",
+        "is_correct": true,
+        "distractor_trap": null
+      },
+      {
+        "key": "C",
+        "latex": "$\\text{only } P \\text{ and } Q$",
+        "is_correct": false,
+        "distractor_trap": null
+      },
+      {
+        "key": "D",
+        "latex": "$\\text{only } Q \\text{ and } R$",
         "is_correct": false,
         "distractor_trap": null
       }
@@ -1996,39 +2020,13 @@
     "question_source": "CBSE_PYQ",
     "pyq_appearance": "CBSE Board PYQ (year not tagged)",
     "difficulty": "MEDIUM",
-    "question_format": "MCQ_SINGLE",
+    "question_format": "SHORT_ANSWER",
     "benchmark_time_seconds": 45,
     "marks_weightage": 2,
     "marks": 2,
     "question_latex": "λα and λp are the wavelengths associated with a moving alpha particle and a\nproton respectively.\nObtain the relation between velocities of the two particles for which,",
-    "options_latex": [
-      {
-        "key": "A",
-        "latex": "$λα > λp$",
-        "is_correct": false,
-        "distractor_trap": null
-      },
-      {
-        "key": "B",
-        "latex": "$λα = λp$",
-        "is_correct": false,
-        "distractor_trap": null
-      }
-    ],
-    "options": [
-      {
-        "key": "A",
-        "latex": "$λα > λp$",
-        "is_correct": false,
-        "distractor_trap": null
-      },
-      {
-        "key": "B",
-        "latex": "$λα = λp$",
-        "is_correct": false,
-        "distractor_trap": null
-      }
-    ],
+    "options_latex": [],
+    "options": [],
     "correct_answer_latex": "",
     "correct_answer": null,
     "solution_latex": "",
@@ -2397,39 +2395,13 @@
     "question_source": "CBSE_PYQ",
     "pyq_appearance": "CBSE Board PYQ (year not tagged)",
     "difficulty": "MEDIUM",
-    "question_format": "MCQ_SINGLE",
+    "question_format": "SHORT_ANSWER",
     "benchmark_time_seconds": 45,
     "marks_weightage": 3,
     "marks": 3,
     "question_latex": "X and Y are two equipotential surfaces separated by a distance of 2 m in a\nuniform electric field of 10 V/m. Surface X has a potential of 10 V",
-    "options_latex": [
-      {
-        "key": "A",
-        "latex": "Calculate the potential of surface Y.",
-        "is_correct": false,
-        "distractor_trap": null
-      },
-      {
-        "key": "B",
-        "latex": "What is the work done in moving a +2 C charge from surface Y to surface",
-        "is_correct": false,
-        "distractor_trap": null
-      }
-    ],
-    "options": [
-      {
-        "key": "A",
-        "latex": "Calculate the potential of surface Y.",
-        "is_correct": false,
-        "distractor_trap": null
-      },
-      {
-        "key": "B",
-        "latex": "What is the work done in moving a +2 C charge from surface Y to surface",
-        "is_correct": false,
-        "distractor_trap": null
-      }
-    ],
+    "options_latex": [],
+    "options": [],
     "correct_answer_latex": "",
     "correct_answer": null,
     "solution_latex": "",
@@ -2498,39 +2470,13 @@
     "question_source": "CBSE_PYQ",
     "pyq_appearance": "CBSE Board PYQ (year not tagged)",
     "difficulty": "MEDIUM",
-    "question_format": "MCQ_SINGLE",
+    "question_format": "SHORT_ANSWER",
     "benchmark_time_seconds": 45,
     "marks_weightage": 3,
     "marks": 3,
     "question_latex": "(a) Compare the de Broglie wavelength associated with the electron in the\nthird orbit to the circumference of the orbit.\n(b) In which of the following will the electrons have the same de Broglie\nwavelength?\n(i) Third orbit of He atom\n(ii) Fourth orbit of He atom\n(iii) Third orbit of Li atom\n(iv) Sixth orbit of Be atom\nShow your calculations.",
-    "options_latex": [
-      {
-        "key": "A",
-        "latex": "Compare the de Broglie wavelength associated with the electron in the",
-        "is_correct": false,
-        "distractor_trap": null
-      },
-      {
-        "key": "B",
-        "latex": "In which of the following will the electrons have the same de Broglie",
-        "is_correct": false,
-        "distractor_trap": null
-      }
-    ],
-    "options": [
-      {
-        "key": "A",
-        "latex": "Compare the de Broglie wavelength associated with the electron in the",
-        "is_correct": false,
-        "distractor_trap": null
-      },
-      {
-        "key": "B",
-        "latex": "In which of the following will the electrons have the same de Broglie",
-        "is_correct": false,
-        "distractor_trap": null
-      }
-    ],
+    "options_latex": [],
+    "options": [],
     "correct_answer_latex": "",
     "correct_answer": null,
     "solution_latex": "",
@@ -2749,39 +2695,13 @@
     "question_source": "CBSE_PYQ",
     "pyq_appearance": "CBSE Board PYQ (year not tagged)",
     "difficulty": "MEDIUM",
-    "question_format": "MCQ_SINGLE",
+    "question_format": "SHORT_ANSWER",
     "benchmark_time_seconds": 45,
     "marks_weightage": 3,
     "marks": 3,
     "question_latex": "(a) A radio wave and an infrasonic wave have the same wavelength when\ntravelling through air. Are their frequencies the same or different? Give a\nreason for your answer.\n(b) An electromagnetic wave traveling east has a magnetic field that oscillates\nvertically and has a frequency of 60 kHz and an rms strength of $8 \\times 10^{-9}$T.\nDetermine the frequency and the rms strength of the electric field. What is the\ndirection of the electric field?",
-    "options_latex": [
-      {
-        "key": "A",
-        "latex": "A radio wave and an infrasonic wave have the same wavelength when",
-        "is_correct": false,
-        "distractor_trap": null
-      },
-      {
-        "key": "B",
-        "latex": "An electromagnetic wave traveling east has a magnetic field that oscillates",
-        "is_correct": false,
-        "distractor_trap": null
-      }
-    ],
-    "options": [
-      {
-        "key": "A",
-        "latex": "A radio wave and an infrasonic wave have the same wavelength when",
-        "is_correct": false,
-        "distractor_trap": null
-      },
-      {
-        "key": "B",
-        "latex": "An electromagnetic wave traveling east has a magnetic field that oscillates",
-        "is_correct": false,
-        "distractor_trap": null
-      }
-    ],
+    "options_latex": [],
+    "options": [],
     "correct_answer_latex": "",
     "correct_answer": null,
     "solution_latex": "",
@@ -2850,39 +2770,13 @@
     "question_source": "CBSE_PYQ",
     "pyq_appearance": "CBSE Board PYQ (year not tagged)",
     "difficulty": "MEDIUM",
-    "question_format": "MCQ_SINGLE",
+    "question_format": "SHORT_ANSWER",
     "benchmark_time_seconds": 45,
     "marks_weightage": 3,
     "marks": 3,
     "question_latex": "A circular ring of diameter 0.2 m is placed in a uniform magnetic field of 0.4\nT. The ring is rotated about its diameter at a frequency of 60 Hz.",
-    "options_latex": [
-      {
-        "key": "A",
-        "latex": "If the ring has 50 turns, then what is the maximum induced emf in the",
-        "is_correct": false,
-        "distractor_trap": null
-      },
-      {
-        "key": "B",
-        "latex": "State one condition under which the induced emf in the circular ring will",
-        "is_correct": false,
-        "distractor_trap": null
-      }
-    ],
-    "options": [
-      {
-        "key": "A",
-        "latex": "If the ring has 50 turns, then what is the maximum induced emf in the",
-        "is_correct": false,
-        "distractor_trap": null
-      },
-      {
-        "key": "B",
-        "latex": "State one condition under which the induced emf in the circular ring will",
-        "is_correct": false,
-        "distractor_trap": null
-      }
-    ],
+    "options_latex": [],
+    "options": [],
     "correct_answer_latex": "",
     "correct_answer": null,
     "solution_latex": "",
@@ -3101,39 +2995,13 @@
     "question_source": "CBSE_PYQ",
     "pyq_appearance": "CBSE Board PYQ (year not tagged)",
     "difficulty": "HARD",
-    "question_format": "MCQ_SINGLE",
+    "question_format": "LONG_DERIVATION",
     "benchmark_time_seconds": 45,
     "marks_weightage": 5,
     "marks": 5,
     "question_latex": "(a) A ray of light is incident at angle θ on a right-angled prism at point X. At\npoint Y, it emerges along the prism surface. Calculate the refractive index of\nthe prism in terms of the incident angle.\n(b) Show that for an equilateral prism kept in air, minimum deviation occurs\nwhen the angle of incidence i = sin-1(n/2), where n is the refractive index of\nthe material of the prism.\nOR\n(a) A Young’s double slit setup is illuminated with monochromatic light. If\nthe intensity of light passing through one of the slits is reduced, explain the\nchanges that can be seen in the appearance of the bright and dark fringes?\n(b) (i) A single slit diffraction setup is illuminated with green light of\nwavelength 500 nm. If the width of the slit is 1 mm and the screen is 2 m\naway from the slits, calculate the width of the central maximum.\n(ii) What will happen to the width of the central maximum, if the green light is\nreplaced with the red light? Give a reason for your answer.",
-    "options_latex": [
-      {
-        "key": "A",
-        "latex": "A ray of light is incident at angle θ on a right-angled prism at point X. At",
-        "is_correct": false,
-        "distractor_trap": null
-      },
-      {
-        "key": "B",
-        "latex": "Show that for an equilateral prism kept in air, minimum deviation occurs",
-        "is_correct": false,
-        "distractor_trap": null
-      }
-    ],
-    "options": [
-      {
-        "key": "A",
-        "latex": "A ray of light is incident at angle θ on a right-angled prism at point X. At",
-        "is_correct": false,
-        "distractor_trap": null
-      },
-      {
-        "key": "B",
-        "latex": "Show that for an equilateral prism kept in air, minimum deviation occurs",
-        "is_correct": false,
-        "distractor_trap": null
-      }
-    ],
+    "options_latex": [],
+    "options": [],
     "correct_answer_latex": "",
     "correct_answer": null,
     "solution_latex": "",
@@ -3402,51 +3270,13 @@
     "question_source": "CBSE_PYQ",
     "pyq_appearance": "CBSE Board PYQ (year not tagged)",
     "difficulty": "MEDIUM",
-    "question_format": "MCQ_SINGLE",
+    "question_format": "CASE_BASED",
     "benchmark_time_seconds": 45,
     "marks_weightage": 1,
     "marks": 1,
     "question_latex": "μF, then find the energy released when the trigger button on the camera is\npressed.",
-    "options_latex": [
-      {
-        "key": "A",
-        "latex": "How much charge does the 100 μF capacitor charged to 300 V hold?",
-        "is_correct": false,
-        "distractor_trap": null
-      },
-      {
-        "key": "B",
-        "latex": "If the distance between the parallel plate capacitor of capacitance 100 μF is",
-        "is_correct": false,
-        "distractor_trap": null
-      },
-      {
-        "key": "C",
-        "latex": "The graph below shows the variation of charge 'q' with potential difference",
-        "is_correct": false,
-        "distractor_trap": null
-      }
-    ],
-    "options": [
-      {
-        "key": "A",
-        "latex": "How much charge does the 100 μF capacitor charged to 300 V hold?",
-        "is_correct": false,
-        "distractor_trap": null
-      },
-      {
-        "key": "B",
-        "latex": "If the distance between the parallel plate capacitor of capacitance 100 μF is",
-        "is_correct": false,
-        "distractor_trap": null
-      },
-      {
-        "key": "C",
-        "latex": "The graph below shows the variation of charge 'q' with potential difference",
-        "is_correct": false,
-        "distractor_trap": null
-      }
-    ],
+    "options_latex": [],
+    "options": [],
     "correct_answer_latex": "",
     "correct_answer": null,
     "solution_latex": "",
@@ -3653,25 +3483,53 @@
     "options_latex": [
       {
         "key": "A",
-        "latex": "$A / sqrt{2}$",
-        "is_correct": true
+        "latex": "$\\frac{A}{\\sqrt{2}}$",
+        "is_correct": true,
+        "distractor_trap": null
       },
       {
         "key": "B",
-        "latex": "$A / 2$",
-        "is_correct": false
+        "latex": "$\\frac{A}{2}$",
+        "is_correct": false,
+        "distractor_trap": null
+      },
+      {
+        "key": "C",
+        "latex": "$\\frac{A}{\\sqrt{3}}$",
+        "is_correct": false,
+        "distractor_trap": null
+      },
+      {
+        "key": "D",
+        "latex": "$$",
+        "is_correct": false,
+        "distractor_trap": null
       }
     ],
     "options": [
       {
         "key": "A",
-        "latex": "$A / sqrt{2}$",
-        "is_correct": true
+        "latex": "$\\frac{A}{\\sqrt{2}}$",
+        "is_correct": true,
+        "distractor_trap": null
       },
       {
         "key": "B",
-        "latex": "$A / 2$",
-        "is_correct": false
+        "latex": "$\\frac{A}{2}$",
+        "is_correct": false,
+        "distractor_trap": null
+      },
+      {
+        "key": "C",
+        "latex": "$\\frac{A}{\\sqrt{3}}$",
+        "is_correct": false,
+        "distractor_trap": null
+      },
+      {
+        "key": "D",
+        "latex": "$$",
+        "is_correct": false,
+        "distractor_trap": null
       }
     ],
     "correct_answer_latex": "$A / sqrt{2}$",
