@@ -1,18 +1,20 @@
 // ============================================================================
-// MODULE: NCERT Core & Exemplars
-// Board: section-by-section NCERT topics, board question types and NCERT /
-//        exemplar question counts per chapter.
-// Competitive: the same NCERT spine plus edge-case traps mined from chapter
-//        focus notes and MCQ distractor explanations.
+// MODULE: NCERT Core & Reading Engine
+// Reference: https://github.com/moktagithub005/Ncert_reading_engine
+// Powers the NCERT menu with the authentic NCERT Reading Engine:
+// - Book ingestion & processing status
+// - Active book chapter & topic hierarchy tree
+// - Full text viewer & extraction details
 // ============================================================================
 
 const content = require('../services/canonicalContentService');
+const ncertEngine = require('../services/ncertReadingEngineService');
 const { resolveSubject, getTaxonomyChapters, chapterKey, recordsForChapter, emptyPayload } = require('./shared');
 
 const MODULE = {
   id: 'ncert_core',
-  title: 'NCERT Core & Exemplars',
-  description: 'NCERT section-wise concepts; competitive mode adds edge-case traps.',
+  title: 'NCERT Core & Reading Engine',
+  description: 'NCERT section-wise concepts and Reading Engine digitization.',
   featureFlag: 'ncertExemplar',
   modes: ['BOARD', 'COMPETITIVE'],
   roles: ['teacher', 'student']
@@ -57,8 +59,7 @@ function build(ctx) {
     .filter(r => r.is_ncert || r.content_type === 'NCERT')
     .slice(0, 5)
     .map(r => ({ id: r.id, questionLatex: r.question_latex, source: r.pyq_appearance || r.content_type, difficulty: r.difficulty_level }));
-  // Board mode: NCERT question sets split the way board teachers use them
-  // (Exercise, Solved Example, Exemplar). Same records, grouped by their raw source.
+
   const asItem = r => ({ id: r.id, questionLatex: r.question_latex, solutionLatex: r.solution_latex, marks: r.marks, difficulty: r.difficulty_level, source: r.pyq_appearance || r.source_raw });
   const ncertSets = {
     exercise: chRecords.filter(r => r.source_raw === 'NCERT_EXERCISE' || r.source_raw === 'NCERT_TEXTBOOK').map(asItem),
@@ -66,9 +67,37 @@ function build(ctx) {
     exemplar: chRecords.filter(r => r.source_raw.includes('EXEMPLAR') || /EXEMPLAR/i.test(r.pyq_appearance || '')).map(asItem)
   };
 
+  // Also include authentic Reading Engine state
+  const allBooks = ncertEngine.listBooks();
+  let matchedBook = null;
+  if (grade) {
+    matchedBook = allBooks.find(b => String(b.class_no) === String(grade) && (
+      (subjectKey && (b.subject.toLowerCase().includes(subjectKey.toLowerCase()) || subjectKey.toLowerCase().includes(b.subject.toLowerCase())))
+    ));
+    if (!matchedBook) {
+      matchedBook = allBooks.find(b => String(b.class_no) === String(grade));
+    }
+  }
+  if (!matchedBook && allBooks.length > 0) matchedBook = allBooks[0];
+  const activeBookId = ctx.bookId || (matchedBook ? matchedBook.id : null);
+  let activeBookTree = null;
+  let firstTopic = null;
+  if (activeBookId) {
+    try {
+      activeBookTree = ncertEngine.getBookTree(activeBookId, true);
+      if (activeBookTree && activeBookTree.chapters && activeBookTree.chapters.length > 0) {
+        const ch0 = activeBookTree.chapters[0];
+        if (ch0 && ch0.topics && ch0.topics.length > 0) {
+          firstTopic = ncertEngine.getTopic(ch0.topics[0].id);
+        }
+      }
+    } catch (e) {}
+  }
+
   return {
     moduleId: MODULE.id,
-    title: isComp ? 'NCERT Core & Traps' : 'NCERT: Exercise, Examples & Exemplar',
+    title: 'NCERT Reading Engine',
+    subtitle: 'Textbook Ingestion, Chapter-wise Topics & Extracted Reading Content',
     mode: ctx.mode,
     track: ctx.track,
     empty: false,
@@ -96,6 +125,13 @@ function build(ctx) {
           exemplar: { count: ncertSets.exemplar.length, items: ncertSets.exemplar.slice(0, 15) }
         },
         traps: isComp ? collectTraps(ch, chRecords) : []
+      },
+      readingEngine: {
+        isReadingEngine: true,
+        books: allBooks,
+        activeBookId,
+        activeBookTree,
+        firstTopic
       }
     }
   };

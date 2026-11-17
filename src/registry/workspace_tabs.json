@@ -122,12 +122,12 @@
       "labels": {
         "BOARD": {
           "title": "NCERT",
-          "subtitle": "Chapters, Exemplar & Exercise",
+          "subtitle": "Reading Engine & Chapters",
           "badge": "NCERT"
         },
         "COMPETITIVE": {
           "title": "NCERT",
-          "subtitle": "Core concepts & edge-case traps",
+          "subtitle": "Reading Engine & Chapters",
           "badge": "NCERT"
         }
       }

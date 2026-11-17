@@ -29,6 +29,7 @@ const tenantRouter = require('./routes/tenant');
 const contentRouter = require('./routes/content');
 const modulesRouter = require('./routes/modules');
 const teacherDppRouter = require('./routes/dpp');
+const ncertReadingEngineRouter = require('./routes/ncertReadingEngine');
 
 const app = express();
 const server = http.createServer(app);
@@ -140,6 +141,9 @@ app.use('/api', tenantRouter);
 app.use('/api/content', contentRouter);
 app.use('/api/modules', modulesRouter);
 app.use('/api/dpp', teacherDppRouter);
+// NCERT Reading Engine API (https://github.com/moktagithub005/Ncert_reading_engine)
+app.use('/api/v1', ncertReadingEngineRouter);
+app.use('/v1', ncertReadingEngineRouter);
 
 // Standalone Backend API Gateway Root
 app.get('/', (req, res) => {
