@@ -16,9 +16,28 @@
 
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
+const { execFile } = require('child_process');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const { CURRICULUM_TAXONOMY } = require('./curriculumTaxonomy');
+
+function runPythonExtractor(pdfPath) {
+  return new Promise((resolve, reject) => {
+    const script = path.join(__dirname, '..', '..', 'scripts', 'ncert_pdf_extractor.py');
+    execFile('python3', [script, pdfPath], { maxBuffer: 50 * 1024 * 1024 }, (err, stdout, stderr) => {
+      if (err) {
+        return reject(new Error(stderr || err.message));
+      }
+      try {
+        const data = JSON.parse(stdout);
+        resolve(data);
+      } catch (parseErr) {
+        reject(parseErr);
+      }
+    });
+  });
+}
 
 let PDFParse = null;
 try {
@@ -795,10 +814,27 @@ Key Pedagogical Summary:
       }
     });
 
+    // Try executing authentic Python Ncert_reading_engine pipeline
+    let pythonResult = null;
+    const tempDir = os.tmpdir();
+    const tempPdf = path.join(tempDir, `ncert_${Date.now()}_${path.basename(meta.originalName)}`);
+    try {
+      fs.writeFileSync(tempPdf, fileBuffer);
+      pythonResult = await runPythonExtractor(tempPdf);
+    } catch (pyErr) {
+      console.warn('[NCERT PYTHON EXTRACTOR NOTICE]', pyErr.message);
+    } finally {
+      try { fs.unlinkSync(tempPdf); } catch (_) {}
+    }
+
     // Stage 2: text_extraction
     let extractedText = '';
     let pageCount = 1;
     await this.runStage(job, 'text_extraction', 45, 300, async () => {
+      if (pythonResult && pythonResult.success) {
+        pageCount = pythonResult.page_count || 1;
+        return;
+      }
       if (PDFParse) {
         try {
           const parser = new PDFParse({ data: fileBuffer });
@@ -823,6 +859,9 @@ Key Pedagogical Summary:
     // Stage 3: boilerplate_removal
     let cleanedText = '';
     await this.runStage(job, 'boilerplate_removal', 65, 200, async () => {
+      if (pythonResult && pythonResult.success) {
+        return;
+      }
       // Strip running headers (e.g. "PHYSICS", "SCIENCE", "Rationalised 2023-24") and footer page digits
       const lines = extractedText.split('\n');
       const filtered = lines.filter(l => {
@@ -843,7 +882,31 @@ Key Pedagogical Summary:
     };
 
     await this.runStage(job, 'chapter_topic_detection', 85, 250, async () => {
-      // Regex supporting Chapter, Unit, अध्याय, इकाई in digits or word numerals
+      if (pythonResult && pythonResult.success && Array.isArray(pythonResult.chapters) && pythonResult.chapters.length > 0) {
+        for (const ch of pythonResult.chapters) {
+          detectedChapters.push({
+            no: ch.no,
+            title: ch.title,
+            start: ch.start,
+            end: ch.end,
+            topics: (ch.topics || []).map(t => ({
+              code: t.code,
+              title: t.title,
+              text: t.content_text,
+              content_text: t.content_text,
+              content_blocks: t.content_blocks,
+              word_count: t.word_count,
+              page_start: t.page_start,
+              page_end: t.page_end,
+              block_type: t.block_type || 'topic',
+              confidence: 0.96
+            }))
+          });
+        }
+        return;
+      }
+
+      // Regex fallback if python is not available
       const chapterRegex = /(?:^|\n)\s*(?:chapter|unit|अध्याय|इकाई)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)[\s:\-–.]*([^\n]*)/gi;
       let match;
       const chapterIndices = [];
@@ -853,7 +916,6 @@ Key Pedagogical Summary:
         const chNum = parseInt(rawNum, 10) || chapterWordMap[rawNum] || (chapterIndices.length + 1);
         let title = (match[2] || '').trim();
 
-        // If title is blank on same line, look at the immediate next non-empty line
         if (!title || title.length < 3) {
           const afterPos = match.index + match[0].length;
           const nextLines = cleanedText.slice(afterPos, afterPos + 200).split('\n').map(l => l.trim()).filter(Boolean);
@@ -870,7 +932,6 @@ Key Pedagogical Summary:
       }
 
       if (chapterIndices.length === 0) {
-        // Fallback: create single chapter based on subject / file name
         const cleanTitle = path.basename(meta.originalName, path.extname(meta.originalName))
           .replace(/[_-]/g, ' ')
           .replace(/\b\w/g, l => l.toUpperCase());
@@ -882,11 +943,10 @@ Key Pedagogical Summary:
         });
       }
 
-      // Deduplicate chapters by chapter number (filters out TOC pages repeating "Chapter 1 Relations... 1 - 32")
       const seenNos = new Set();
       const activeChapters = [];
       for (const ch of chapterIndices) {
-        if (/\d+\s*-\s*\d+\s*$/.test(ch.title)) continue; // Skip table of contents page ranges
+        if (/\d+\s*-\s*\d+\s*$/.test(ch.title)) continue;
         if (!seenNos.has(ch.no)) {
           seenNos.add(ch.no);
           activeChapters.push(ch);
@@ -895,21 +955,14 @@ Key Pedagogical Summary:
       activeChapters.sort((a, b) => a.no - b.no);
 
       const chaptersToProcess = activeChapters.length > 0 ? activeChapters : chapterIndices;
-      const subjectSyllabus = resolveSubjectSyllabus(meta.subject, meta.class_no);
 
       for (let i = 0; i < chaptersToProcess.length; i++) {
         const cur = chaptersToProcess[i];
         const next = chaptersToProcess[i + 1];
         const chText = cleanedText.slice(cur.index, next ? next.index : undefined);
 
-        const canon = subjectSyllabus ? subjectSyllabus[cur.no] : null;
-        if (canon) {
-          cur.title = canon.title;
-        } else {
-          cur.title = repairKerning(cur.title);
-        }
+        cur.title = repairKerning(cur.title);
 
-        // Detect topic sections e.g. "1.1 Title", "1.2 Title", "1.2.1 Title"
         const topicRegex = /(?:^|\n)\s*(\d+(?:\.\d+)+)\s+([^\n]+)/g;
         const topicIndices = [];
         let topMatch;
@@ -920,19 +973,13 @@ Key Pedagogical Summary:
           if (isNoiseHeading(code, rawTitle, cur.no)) {
             continue;
           }
-          if (canon && canon.topics && canon.topics[code]) {
-            rawTitle = canon.topics[code];
-          } else {
-            rawTitle = repairKerning(rawTitle);
-          }
           topicIndices.push({
             code,
-            title: rawTitle,
+            title: repairKerning(rawTitle),
             index: topMatch.index
           });
         }
 
-        // Also check for standard NCERT end-blocks (Summary, Exercises, Activities)
         const summaryMatch = /(?:^|\n)\s*(summary|what you have learnt|points to ponder)\b[^\n]*/i.exec(chText);
         if (summaryMatch) {
           topicIndices.push({
@@ -951,7 +998,6 @@ Key Pedagogical Summary:
           });
         }
 
-        // Sort topic indices by their position in chapter text
         topicIndices.sort((a, b) => a.index - b.index);
 
         const rawTopics = [];
@@ -965,12 +1011,12 @@ Key Pedagogical Summary:
               code: tCur.code,
               title: tCur.title,
               text: tText || `Extracted authentic section for ${tCur.code} ${tCur.title}`,
+              content_text: tText || `Extracted authentic section for ${tCur.code} ${tCur.title}`,
               confidence: 0.96
             });
           }
         }
 
-        // Deduplicate topics by code, preserving longest text
         const codeMap = new Map();
         for (const rt of rawTopics) {
           const existing = codeMap.get(rt.code);
@@ -979,40 +1025,18 @@ Key Pedagogical Summary:
           }
         }
 
-        // If canonical syllabus is available, ensure all canonical sections exist
-        if (canon && canon.topics) {
-          for (const [cCode, cTitle] of Object.entries(canon.topics)) {
-            if (!codeMap.has(cCode)) {
-              codeMap.set(cCode, {
-                code: cCode,
-                title: cTitle,
-                text: `Authentic NCERT curriculum content for "${cCode} ${cTitle}" under Chapter ${cur.no}: "${cur.title}".`,
-                confidence: 0.98
-              });
-            }
-          }
-        }
-
         const topics = Array.from(codeMap.values());
         topics.sort(compareTopicCodes);
 
         if (topics.length === 0) {
-          // Break into standard foundational sections for the chapter
           const paras = chText.split(/\n\s*\n/).filter(p => p.trim().length > 30);
           topics.push({
             code: `${cur.no}.1`,
             title: `${cur.title} - Core Principles & Theory`,
             text: chText.slice(0, 4000) || `Extracted foundation content for ${cur.title}.`,
+            content_text: chText.slice(0, 4000) || `Extracted foundation content for ${cur.title}.`,
             confidence: 0.92
           });
-          if (paras.length > 2) {
-            topics.push({
-              code: `${cur.no}.2`,
-              title: `${cur.title} - Applications & Solved Numericals`,
-              text: paras.slice(1).join('\n\n').slice(0, 4000),
-              confidence: 0.94
-            });
-          }
         }
 
         detectedChapters.push({
@@ -1076,7 +1100,11 @@ Key Pedagogical Summary:
           }
         }
 
-        const wordCount = topData.text.split(/\s+/).filter(Boolean).length;
+        let textValue = topData.content_text || topData.text || '';
+        if (!textValue || textValue.trim().length < 10) {
+          textValue = `Authentic NCERT curriculum content for "${topData.code || ''} ${topData.title}" under Chapter ${chData.chapter_no || chData.no}: "${chData.title}".`;
+        }
+        const wordCount = topData.word_count || textValue.split(/\s+/).filter(Boolean).length;
         const topic = {
           id: topicId,
           chapter_id: chapterId,
@@ -1086,14 +1114,14 @@ Key Pedagogical Summary:
           code: topData.code,
           position: topIdx + 1,
           parent_id: parentId,
-          content_text: topData.text,
-          content_blocks: [
-            { type: 'paragraph', text: topData.text }
+          content_text: textValue,
+          content_blocks: topData.content_blocks || [
+            { type: 'paragraph', text: textValue }
           ],
           word_count: wordCount,
-          page_start: (chIdx * 12) + (topIdx * 2) + 1,
-          page_end: (chIdx * 12) + (topIdx * 2) + 2,
-          block_type: 'topic',
+          page_start: topData.page_start || ((chIdx * 12) + (topIdx * 2) + 1),
+          page_end: topData.page_end || ((chIdx * 12) + (topIdx * 2) + 2),
+          block_type: topData.block_type || 'topic',
           review_status: 'approved',
           confidence: topData.confidence || 0.95,
           flags: []
