@@ -53,6 +53,28 @@ async function runTests() {
   console.log(`   - Cache Hits: ${cachedResult.cache_hits}`);
   console.log(`   - Token Savings: ${cachedResult.token_savings_description}`);
 
+  // Test 4: Subject Isolation Verification (Math Topic must have Math content, ZERO physics bias)
+  console.log('\n[TEST 4] Testing Subject Isolation for Mathematics...');
+  const mathBook = books.find(b => (b.subject || '').toLowerCase().includes('math') || (b.title || '').toLowerCase().includes('math'));
+  if (mathBook) {
+    const mathTree = ncertService.getBookTree(mathBook.id);
+    const mathChap = mathTree.chapters.find(c => (c.title || '').toLowerCase().includes('matrices') || c.chapter_number === 3) || mathTree.chapters[0];
+    const mathTopic = mathChap.topics.find(t => (t.title || '').toLowerCase().includes('matrix') || t.code === '3.2') || mathChap.topics[0];
+    const fullMathTopic = ncertService.getTopic(mathTopic.id);
+    console.log(`Testing Math Topic: "${fullMathTopic.title}" under "${mathChap.title}"`);
+
+    const mathStudy = await aiStudyService.getTopicAiStudy(fullMathTopic, true);
+    assert(mathStudy, 'Math study aid must be generated');
+    const fullText = JSON.stringify(mathStudy).toLowerCase();
+    assert(!fullText.includes('q = ne'), 'Math study aid must not contain physics formula q = ne');
+    assert(!fullText.includes('coulomb'), 'Math study aid must not contain coulombs');
+    assert(!fullText.includes('charge conservation'), 'Math study aid must not contain charge conservation');
+    console.log(`✅ Mathematics Subject Isolation Verified!`);
+    console.log(`   - Topic: ${mathStudy.topic_title}`);
+    console.log(`   - Provider: ${mathStudy.llm_provider}`);
+    console.log(`   - Formulas: ${JSON.stringify(mathStudy.bullet_points.governing_formulas.map(f => f.latex))}`);
+  }
+
   console.log('\n======================================================');
   console.log('🎉 ALL NCERT AI STUDY & CACHING TESTS PASSED 100%!');
   console.log('======================================================\n');

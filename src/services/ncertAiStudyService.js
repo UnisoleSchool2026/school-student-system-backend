@@ -63,7 +63,7 @@ function cleanJsonText(raw) {
  * Call Groq Cloud API for fast low-latency generation
  */
 async function callGroq({ apiKey, systemPrompt, userPrompt }) {
-  const models = ['llama-3.3-70b-versatile', 'llama3-70b-8192', 'qwen-2.5-32b'];
+  const models = ['qwen/qwen3.8-27b', 'openai/gpt-oss-120b', 'openai/gpt-oss-20b'];
   let lastErr = null;
   for (const model of models) {
     try {
@@ -107,7 +107,7 @@ async function callGroq({ apiKey, systemPrompt, userPrompt }) {
  * Call Google Gemini API
  */
 async function callGemini({ apiKey, systemPrompt, userPrompt }) {
-  const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest'];
+  const models = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-3.8-flash'];
   let lastErr = null;
   for (const model of models) {
     try {
@@ -148,6 +148,7 @@ async function callGemini({ apiKey, systemPrompt, userPrompt }) {
 /**
  * Deterministic pedagogical fallback ensuring 100% offline uptime
  * Formatted with simple student-friendly wording and clean LaTeX notation
+ * Strictly subject-aware: extracts content directly from the topic without hardcoded physics biases.
  */
 function buildFallbackStudyAid(topic) {
   const code = topic.code || '';
@@ -163,61 +164,64 @@ function buildFallbackStudyAid(topic) {
     ? cleanSentences.slice(0, 2).join(' ')
     : `In this section, you learn the core principles of $${title}$. Understanding how variables interact is essential for solving numericals and conceptual board questions.`;
 
-  // Extract LaTeX equations if present
+  // Extract LaTeX equations or math terms if present
   const mathMatches = text.match(/\$[^$]+\$/g) || [];
   const formulas = mathMatches.slice(0, 4).map((m, idx) => ({
-    name: `Formula ${idx + 1}`,
+    name: `Relation ${idx + 1}`,
     latex: m,
-    note: 'Standard relation for this section'
+    note: `Standard formulation in ${title}`
   }));
 
   if (formulas.length === 0) {
     formulas.push({
-      name: 'Governing Formula',
-      latex: '$q = ne$',
-      note: 'where $n$ is an integer and $e = 1.602 \\times 10^{-19}\\,\\text{C}$'
+      name: 'Key Expression',
+      latex: `$${title}$`,
+      note: 'Fundamental definition and standard representation'
     });
   }
+
+  const primaryIdea = cleanSentences[0] || `The core mathematical and conceptual foundation of ${title}.`;
+  const secondaryIdea = cleanSentences[1] || `Key properties and relationships governing ${title}.`;
 
   return {
     summary_notes: {
       overview: simpleOverview,
       core_concepts: [
         {
-          title: 'Core Idea',
-          detail: cleanSentences[0] || `The fundamental idea behind $${title}$ describes how quantities behave under standard conditions.`
+          title: 'Core Concept',
+          detail: primaryIdea
         },
         {
-          title: 'Mathematical Relation',
-          detail: cleanSentences[1] || `The governing relation uses ${formulas[0].latex} to connect physical properties.`
+          title: 'Governing Formulation',
+          detail: cleanSentences[1] ? secondaryIdea : `Apply the standard relation ${formulas[0].latex} systematically.`
         },
         {
           title: 'Key Takeaway',
-          detail: 'Always check that physical quantities have matching SI units before performing calculations.'
+          detail: `Mastering the definition and step-by-step rules of ${title} ensures accurate problem solving.`
         }
       ],
       key_definitions: [
         {
           term: title,
-          definition: cleanSentences[0] || `The primary concept describing physical interactions in this section.`
+          definition: cleanSentences[0] || `The central concept examined in this section of the curriculum.`
         }
       ]
     },
     bullet_points: {
       high_yield_takeaways: [
-        `Understand the physical meaning of each variable in ${formulas[0].latex}.`,
-        'Keep track of vector directions and coordinate signs (positive vs negative).',
-        'In board exams, writing the governing formula first awards 1 full step mark.'
+        `Identify the given conditions and variables in ${formulas[0].latex}.`,
+        'Check algebraic signs, domain restrictions, and notation conventions before proceeding.',
+        'In board examinations, explicitly stating the initial definition or formula earns full step credit.'
       ],
       governing_formulas: formulas,
       exam_traps: [
         {
-          trap: 'Forgetting to convert units to SI (e.g. converting cm to m or $\\mu\\text{C}$ to $\\text{C}$)',
-          remedy: 'Convert all given values into meters ($1\\,\\text{m} = 100\\,\\text{cm}$) and Coulombs ($1\\,\\mu\\text{C} = 10^{-6}\\,\\text{C}$) before multiplying.'
+          trap: `Misapplying properties or skipping initial conditions in "${title}"`,
+          remedy: 'Carefully verify the scope of the definition and apply simplification rules step-by-step.'
         },
         {
-          trap: 'Treating vectors as plain scalars',
-          remedy: 'Resolve quantities into $x$ and $y$ components and add vectorially.'
+          trap: 'Computational slips during intermediate algebraic steps',
+          remedy: 'Re-check intermediate substitution and maintain consistent bracket notation throughout.'
         }
       ]
     },
@@ -226,37 +230,37 @@ function buildFallbackStudyAid(topic) {
         id: `q_${code}_1`,
         question: `Which of the following statements about "${title}" is correct?`,
         options: [
-          { key: 'A', text: cleanSentences[0] || `The quantity follows conservation rules in closed systems.` },
-          { key: 'B', text: 'It completely violates energy and charge conservation principles.' },
-          { key: 'C', text: 'The value is always zero regardless of experimental setup.' },
-          { key: 'D', text: 'It only applies to uncharged neutral matter at absolute zero.' }
+          { key: 'A', text: cleanSentences[0] || `It follows the standard formal definitions and structural rules established in this section.` },
+          { key: 'B', text: 'It completely violates the foundational definitions of the subject.' },
+          { key: 'C', text: 'The result is universally zero under all possible mathematical conditions.' },
+          { key: 'D', text: 'It cannot be evaluated or applied to any valid problem instances.' }
         ],
         correct_answer: 'A',
-        explanation: `Option A is correct: "${cleanSentences[0] || 'The quantity follows conservation rules in closed systems.'}".`
+        explanation: `Option A is correct: "${cleanSentences[0] || `It follows the standard formal definitions and structural rules established in this section.`}".`
       },
       {
         id: `q_${code}_2`,
-        question: `What is the most common mistake students make when solving numericals for "${title}"?`,
+        question: `What is the most common error to avoid when working with "${title}"?`,
         options: [
-          { key: 'A', text: 'Forgetting Cartesian signs and unit conversions (e.g., cm to m).' },
-          { key: 'B', text: 'Writing down the governing formula and checking SI units.' },
-          { key: 'C', text: 'Drawing a labelled diagram to identify vector directions.' },
-          { key: 'D', text: 'Stating the final answer with proper physical units.' }
+          { key: 'A', text: 'Overlooking boundary conditions, domain constraints, or sign conventions.' },
+          { key: 'B', text: 'Writing down the governing definition and checking each step carefully.' },
+          { key: 'C', text: 'Verifying intermediate calculations before arriving at the final result.' },
+          { key: 'D', text: 'Labeling variables clearly and stating the final conclusion.' }
         ],
         correct_answer: 'A',
-        explanation: 'Failing to convert prefixes like cm to m or forgetting positive/negative signs is the most common student error.'
+        explanation: 'Failing to check initial constraints, domain limits, or sign conventions is the most frequent student mistake.'
       },
       {
         id: `q_${code}_3`,
-        question: `Which governing equation applies to "${title}"?`,
+        question: `Which fundamental representation or formula is associated with "${title}"?`,
         options: [
           { key: 'A', text: formulas[0].latex },
-          { key: 'B', text: '$PV = nRT^3$' },
-          { key: 'C', text: '$\\lambda = \\frac{h}{mv^2}$' },
-          { key: 'D', text: '$v^2 = u^2 - 4as$' }
+          { key: 'B', text: '$0 = 1$' },
+          { key: 'C', text: '$\\infty - \\infty = 0$' },
+          { key: 'D', text: '$\\frac{0}{0} = 1$' }
         ],
         correct_answer: 'A',
-        explanation: `Option A (${formulas[0].latex}) is the correct formula for this topic.`
+        explanation: `Option A (${formulas[0].latex}) represents the valid formulation for this section.`
       }
     ]
   };
@@ -425,10 +429,16 @@ async function getTopicAiStudy(topic, forceRefresh = false) {
   return payload;
 }
 
+function clearCache() {
+  memoryCache.clear();
+  saveCacheToDisk();
+}
+
 module.exports = {
   getTopicAiStudy,
   loadCacheFromDisk,
   saveCacheToDisk,
-  buildFallbackStudyAid
+  buildFallbackStudyAid,
+  clearCache
 };
 
