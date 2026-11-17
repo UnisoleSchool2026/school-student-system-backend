@@ -34,7 +34,9 @@
       "cheatSheets": false,
       "dailyPracticeProblems": false,
       "rankAnalytics": false,
-      "ntaTimedMockEngine": false
+      "ntaTimedMockEngine": false,
+      "studyBoard": true,
+      "classDesk": true
     }
   },
   "competitiveConfig": {
@@ -57,7 +59,9 @@
       "cheatSheets": true,
       "dailyPracticeProblems": true,
       "rankAnalytics": false,
-      "ntaTimedMockEngine": true
+      "ntaTimedMockEngine": true,
+      "studyBoard": true,
+      "classDesk": true
     },
     "dpp": {
       "questionsPerDay": 12,

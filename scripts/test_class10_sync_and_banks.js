@@ -95,9 +95,12 @@ async function runTestSuite() {
   const classesRes = await makeRequest('/api/curriculum/classes?teacherSubjectKey=CLASS10_MATHEMATICS');
   assert(classesRes.status === 200, 'GET /api/curriculum/classes returns HTTP 200');
   assert(Array.isArray(classesRes.data.classes), 'Classes array returned');
-  assert(classesRes.data.classes.length === 1, 'Only 1 class available for Class 10 Math teacher (10-Science-A)');
-  
-  const c10Class = classesRes.data.classes[0];
+  // The Class 10 maths teacher teaches 10-Science-A (4 students) and the seeded 10-Maths-A section.
+  const c10Ids = classesRes.data.classes.map(c => c.id).sort();
+  assert(JSON.stringify(c10Ids) === JSON.stringify(['10-Maths-A', '10-Science-A']), `Class 10 Math teacher sees 10-Science-A and 10-Maths-A (found ${c10Ids.join(', ')})`);
+  assert(classesRes.data.classes.every(c => c.grade === '10' && c.subjects.length === 1 && c.subjects[0].key === 'CLASS10_MATHEMATICS'), 'Every class is grade 10 and scoped to CLASS10_MATHEMATICS');
+
+  const c10Class = classesRes.data.classes.find(c => c.id === '10-Science-A');
   assert(c10Class.id === '10-Science-A', 'Class ID is 10-Science-A');
   assert(c10Class.grade === '10', 'Class grade is 10');
   assert(c10Class.subjects.length === 1 && c10Class.subjects[0].key === 'CLASS10_MATHEMATICS', 'Subjects scoped strictly to CLASS10_MATHEMATICS');

@@ -25,6 +25,8 @@ const IngestionRequestSchema = z.object({
   payload: z.string().optional(),
   rawText: z.string().optional(),
   mediaData: z.string().optional(),
+  // Several photos of the same paper (data URLs), read together.
+  mediaList: z.array(z.string()).max(6, 'Upload at most 6 photos at a time.').optional(),
   mimeType: z.string().optional(),
   category: z.string().optional(),
   paperMeta: z.object({
@@ -73,14 +75,18 @@ const IngestionRequestSchema = z.object({
  * Validates request input body and returns normalized data or throws 400 error
  */
 function validateIngestionPayload(body = {}) {
-  // Support legacy parameter aliases
+  // Support legacy parameter aliases. Optional fields sent as null (e.g. mediaData in
+  // "Paste Text" mode) are treated as not sent, instead of failing validation.
+  const cleaned = {};
+  Object.keys(body || {}).forEach(k => { if (body[k] !== null) cleaned[k] = body[k]; });
+  body = cleaned;
   const adapted = {
     ...body,
     mode: body.mode ? String(body.mode).trim().toUpperCase() : undefined,
     track: body.track ? examPatterns.normalizeKey(body.track) : (body.board || body.stream ? examPatterns.normalizeKey(body.board || body.stream) : undefined),
     subject: body.subject || body.targetSubject || body.targetSubjectKey || 'Physics',
     grade: body.classLevel || body.grade || '12',
-    sourceType: body.sourceType || body.mode_source || (body.mediaData ? (body.mimeType?.includes('pdf') ? 'pdf' : 'image') : 'text')
+    sourceType: body.sourceType || body.mode_source || ((body.mediaData || (Array.isArray(body.mediaList) && body.mediaList.length)) ? (body.mimeType?.includes('pdf') ? 'pdf' : 'image') : 'text')
   };
 
   const result = IngestionRequestSchema.safeParse(adapted);

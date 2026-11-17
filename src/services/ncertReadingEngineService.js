@@ -478,7 +478,10 @@ function isNoiseHeading(code, title, chapterNo) {
 }
 
 
+const dataPaths = require('../config/dataPaths');
+// Starting data (committed). Changes are written to backend/data/ncert_reading_books.json instead.
 const STORAGE_FILE = path.join(__dirname, '../database/ncert_reading_books.json');
+const STORAGE_NAME = 'ncert_reading_books.json';
 
 // JWT secret for local token signing
 const JWT_SECRET = process.env.JWT_SECRET || 'ncert-reading-engine-secure-dev-secret-2026';
@@ -544,24 +547,25 @@ class NcertReadingEngineService {
     };
   }
 
+  // Checks a token issued by login(): the HMAC signature must match and it must not be expired.
+  // A missing, forged or expired token is rejected (status 401). Refresh tokens carry a "_refresh" suffix.
   verifyToken(authHeader) {
-    if (!authHeader) return { id: 'admin_sys', email: 'ncert-admin@example.com', role: 'admin' };
-    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-    if (!token) return { id: 'admin_sys', email: 'ncert-admin@example.com', role: 'admin' };
+    const fail = () => { const err = new Error('Authentication required'); err.status = 401; return err; };
+    const token = String(authHeader || '').replace(/^Bearer\s+/i, '').trim().replace(/_refresh$/, '');
+    const parts = token.split('.');
+    if (parts.length !== 3) throw fail();
+    const expected = crypto.createHmac('sha256', JWT_SECRET).update(`${parts[0]}.${parts[1]}`).digest('base64url');
+    const given = Buffer.from(parts[2]);
+    const want = Buffer.from(expected);
+    if (given.length !== want.length || !crypto.timingSafeEqual(given, want)) throw fail();
+    let payload;
     try {
-      const parts = token.split('.');
-      if (parts.length >= 2) {
-        const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
-        return {
-          id: payload.sub || 'admin_sys',
-          email: payload.email || 'ncert-admin@example.com',
-          role: payload.role || 'admin'
-        };
-      }
-    } catch {
-      // Fallback to active admin
+      payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+    } catch (e) {
+      throw fail();
     }
-    return { id: 'admin_sys', email: 'ncert-admin@example.com', role: 'admin' };
+    if (!payload || (payload.exp && payload.exp < Math.floor(Date.now() / 1000))) throw fail();
+    return { id: payload.sub, email: payload.email, role: payload.role || 'admin' };
   }
 
   // --------------------------------------------------------------------------
@@ -817,7 +821,8 @@ Key Pedagogical Summary:
     // Try executing authentic Python Ncert_reading_engine pipeline
     let pythonResult = null;
     const tempDir = os.tmpdir();
-    const tempPdf = path.join(tempDir, `ncert_${Date.now()}_${path.basename(meta.originalName)}`);
+    // Random temp name: the uploaded file name is never used in a path.
+    const tempPdf = path.join(tempDir, `ncert_${Date.now()}_${crypto.randomBytes(6).toString('hex')}.pdf`);
     try {
       fs.writeFileSync(tempPdf, fileBuffer);
       pythonResult = await runPythonExtractor(tempPdf);
@@ -1344,7 +1349,7 @@ Key Pedagogical Summary:
         chapters: Array.from(this.chapters.values()),
         topics: Array.from(this.topics.values())
       };
-      fs.writeFileSync(STORAGE_FILE, JSON.stringify(data, null, 2), 'utf8');
+      dataPaths.writeJson(STORAGE_NAME, data, false);
     } catch (err) {
       console.warn('[NCERT ENGINE] Disk persistence save warning:', err.message);
     }
@@ -1352,8 +1357,9 @@ Key Pedagogical Summary:
 
   loadFromDisk() {
     try {
-      if (fs.existsSync(STORAGE_FILE)) {
-        const raw = fs.readFileSync(STORAGE_FILE, 'utf8');
+      const source = dataPaths.readPath(STORAGE_NAME, STORAGE_FILE);
+      if (source) {
+        const raw = fs.readFileSync(source, 'utf8');
         const data = JSON.parse(raw);
         if (data && Array.isArray(data.books)) {
           data.books.forEach(b => this.books.set(b.id, b));
