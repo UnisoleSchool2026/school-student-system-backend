@@ -75,10 +75,11 @@ async function main() {
     const boardTabs = cfg.body.tenant.modes.BOARD.tabs.teacher.map(t => t.id);
     const compTabs = cfg.body.tenant.modes.COMPETITIVE.tabs.teacher.map(t => t.id);
     // Board: Create Test, Class Progress, Question Bank (chapter-wise PYQ), Scan Sheets, NCERT (exercise, examples, exemplar)
-    assert.deepStrictEqual(boardTabs, ['createTest', 'classProgress', 'questionBank', 'scanSheets', 'ncertCore'], `board tabs: ${boardTabs}`);
+    assert.deepStrictEqual(boardTabs, ['createTest', 'classProgress', 'questionBank', 'classDesk', 'studyBoard', 'scanSheets', 'ncertCore'], `board tabs: ${boardTabs}`);
     // Competitive: Create Test, Class Progress, Question Bank (chapter-wise PYQ), NCERT, Roadmap, chapter-wise DPP, Cheat Sheet. No Scan Sheets.
-    assert.deepStrictEqual(compTabs, ['createTest', 'classProgress', 'questionBank', 'ncertCore', 'roadmap', 'practiceDpp', 'cheatSheets'], `competitive tabs: ${compTabs}`);
-    assert(boardTabs.length <= 7 && compTabs.length <= 7, 'more than 7 nav items');
+    assert.deepStrictEqual(compTabs, ['createTest', 'classProgress', 'questionBank', 'classDesk', 'studyBoard', 'ncertCore', 'roadmap', 'practiceDpp', 'cheatSheets'], `competitive tabs: ${compTabs}`);
+    // The "at most 7 nav items" rule is kept by the frontend shell: js/appShell.js shows 7 tabs and puts the rest under "More".
+    assert(boardTabs.length <= 7, 'board mode should fit the top bar without a More menu');
   });
   await check('ICSE is listed but flagged as having no content; CBSE/HP have content', () => {
     const tracks = cfg.body.tenant.modes.BOARD.tracks;

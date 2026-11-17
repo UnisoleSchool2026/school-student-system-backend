@@ -11,7 +11,11 @@ const { reconcileExtraction, normalizeQuestionWithManifest } = require('../src/s
 const { parseRawTextLocally } = require('../src/services/questionInjectionService');
 
 const FIXTURES_DIR = path.resolve(__dirname, '../tests/fixtures/papers');
-const REPORT_PATH = path.resolve(__dirname, '../docs/extraction-benchmarks.md');
+// The committed report (docs/) is only rewritten with --update-docs (npm run benchmarks:update-docs).
+// Normal runs (npm run test:ingestion) write to backend/data/ so they do not change tracked files.
+const REPORT_PATH = process.argv.includes('--update-docs')
+  ? path.resolve(__dirname, '../docs/extraction-benchmarks.md')
+  : path.join(require('../src/config/dataPaths').ensureDataDir(), 'extraction-benchmarks.md');
 
 async function runBenchmarks() {
   console.log('=== RUNNING INGESTION EXTRACTION & RECONCILIATION BENCHMARKS ===\n');

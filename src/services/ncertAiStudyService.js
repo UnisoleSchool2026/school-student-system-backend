@@ -7,15 +7,19 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+const dataPaths = require('../config/dataPaths');
+// Starting cache (committed). New study aids are written to backend/data/ncert_ai_study_cache.json.
 const CACHE_FILE = path.join(__dirname, '../database/ncert_ai_study_cache.json');
+const CACHE_NAME = 'ncert_ai_study_cache.json';
 
 // In-Memory RAM Cache Map
 const memoryCache = new Map();
 
 function loadCacheFromDisk() {
   try {
-    if (fs.existsSync(CACHE_FILE)) {
-      const raw = fs.readFileSync(CACHE_FILE, 'utf-8');
+    const source = dataPaths.readPath(CACHE_NAME, CACHE_FILE);
+    if (source) {
+      const raw = fs.readFileSync(source, 'utf-8');
       const parsed = JSON.parse(raw);
       Object.keys(parsed).forEach(k => {
         memoryCache.set(k, parsed[k]);
@@ -29,13 +33,11 @@ function loadCacheFromDisk() {
 
 function saveCacheToDisk() {
   try {
-    const dir = path.dirname(CACHE_FILE);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     const obj = {};
     memoryCache.forEach((val, key) => {
       obj[key] = val;
     });
-    fs.writeFileSync(CACHE_FILE, JSON.stringify(obj, null, 2), 'utf-8');
+    dataPaths.writeJson(CACHE_NAME, obj, true);
   } catch (err) {
     console.error('[NCERT AI STUDY] Failed writing cache to disk:', err.message);
   }

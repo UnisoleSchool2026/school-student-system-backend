@@ -4234,6 +4234,7 @@ const inMemoryStore = {
 };
 
 function initDatabase() {
+  if (pool) return;
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     console.log('[DATABASE] No DATABASE_URL set. Initializing high-speed in-memory store for HAPS-AI Assistant.');
@@ -4241,13 +4242,17 @@ function initDatabase() {
   }
 
   try {
-    pool = new Pool({
+    // SSL: a "sslmode=..." in the URL decides; otherwise DATABASE_SSL=true/false, else on in production.
+    const sslEnv = String(process.env.DATABASE_SSL || '').toLowerCase();
+    const wantSsl = sslEnv === 'true' || (sslEnv !== 'false' && process.env.NODE_ENV === 'production');
+    const poolConfig = {
       connectionString,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000
-    });
+    };
+    if (!/[?&]sslmode=/.test(connectionString)) poolConfig.ssl = wantSsl ? { rejectUnauthorized: false } : false;
+    pool = new Pool(poolConfig);
 
     pool.on('connect', () => {
       isConnected = true;
@@ -4266,10 +4271,7 @@ function initDatabase() {
 async function query(text, params = []) {
   if (pool && isConnected) {
     try {
-      const start = Date.now();
       const res = await pool.query(text, params);
-      const duration = Date.now() - start;
-      console.log(`[DATABASE QUERY] ${text.slice(0, 40)}... took ${duration}ms, rows: ${res.rowCount}`);
       return res;
     } catch (err) {
       console.warn('[DATABASE QUERY ERROR] Falling back to in-memory store:', err.message);
@@ -4340,7 +4342,9 @@ try {
   const fs = require('fs');
   const path = require('path');
   const { sanitizeQuestionPayload } = require('../services/llmQuestionEngine');
+  // Runtime copy first (backend/data), then the committed starting data, then /tmp.
   const storagePaths = [
+    require('./dataPaths').runtimePath('custom_injected_questions.json'),
     path.join(__dirname, '..', 'database', 'custom_injected_questions.json'),
     '/tmp/custom_injected_questions.json'
   ];
@@ -4361,14 +4365,16 @@ try {
     } catch (e) {}
   }
 
-  // Update persistent file with sanitized questions
-  if (loadedFromPath && persistedCustom.length > 0) {
+  // Re-save the sanitized questions, but only to the runtime copy (never to the committed file).
+  if (loadedFromPath && persistedCustom.length > 0 && loadedFromPath === storagePaths[0]) {
     try {
       fs.writeFileSync(loadedFromPath, JSON.stringify(persistedCustom, null, 2), 'utf8');
     } catch (e) {}
   }
 
   if (persistedCustom.length > 0 && inMemoryStore.subjectBanks) {
+    // Kept as a store collection so teacher-added questions are saved to PostgreSQL too.
+    inMemoryStore.injectedQuestions = persistedCustom.slice();
     persistedCustom.forEach(rawQ => {
       if (!rawQ || !rawQ.id) return;
       const q = sanitizeQuestionPayload(rawQ);
@@ -4409,8 +4415,36 @@ try {
   console.warn('[DATABASE] Persisted questions hydration notice:', e.message);
 }
 
+if (!Array.isArray(inMemoryStore.injectedQuestions)) inMemoryStore.injectedQuestions = [];
+
+// Puts teacher-added questions (loaded from PostgreSQL) into the subject banks they belong to.
+function hydrateInjectedQuestions(list = []) {
+  const { sanitizeQuestionPayload } = require('../services/llmQuestionEngine');
+  let added = 0;
+  list.forEach(rawQ => {
+    if (!rawQ || !rawQ.id) return;
+    const q = sanitizeQuestionPayload(rawQ);
+    const sUpper = String(q.subjectKey || q.subject || '').toUpperCase();
+    const isC10 = String(q.grade) === '10';
+    let bankKey = 'senior_physics';
+    if (isC10) bankKey = sUpper.includes('MATH') ? 'class10_maths' : 'class10_science';
+    else if (sUpper.includes('CHEM')) bankKey = 'senior_chemistry';
+    else if (sUpper.includes('BIO')) bankKey = 'senior_biology';
+    else if (sUpper.includes('MATH')) bankKey = 'senior_mathematics';
+    const targets = [bankKey].concat(bankKey === 'class10_maths' ? ['class10_math_pyq_ncert'] : []);
+    targets.forEach(key => {
+      if (!Array.isArray(inMemoryStore.subjectBanks[key])) inMemoryStore.subjectBanks[key] = [];
+      if (!inMemoryStore.subjectBanks[key].some(item => item.id === q.id)) { inMemoryStore.subjectBanks[key].unshift(q); added += 1; }
+    });
+  });
+  return added;
+}
+
 module.exports = {
   initDatabase,
   query,
-  inMemoryStore
+  inMemoryStore,
+  getPool: () => pool,
+  markConnected: (v) => { isConnected = Boolean(v); },
+  hydrateInjectedQuestions
 };
