@@ -4,7 +4,7 @@
     "topic_title": "Chemical Reactions and Chemical Equations",
     "topic_code": "1.1",
     "cached": false,
-    "cached_at": "2026-11-16T23:56:40.287Z",
+    "cached_at": "2026-11-16T23:58:51.327Z",
     "cache_hits": 2,
     "llm_provider": "NCERT Curriculum Engine (Deterministic High-Yield)",
     "token_usage": {
@@ -131,6 +131,276 @@
         ],
         "correct_answer": "A",
         "explanation": "Option A ($\\text{Zn (s)} + \\text{H}_2\\text{SO}_4\\text{ (aq)} \\longrightarrow \\text{ZnSO}_4\\text{ (aq)} + \\text{H}_2\\text{ (g)} \\uparrow$) is the correct formula for this topic."
+      }
+    ]
+  },
+  "topic_study_top_chap_book_efde2383-b9f2-44dc-b33c-5529f634332b_1_1": {
+    "topic_id": "top_chap_book_efde2383-b9f2-44dc-b33c-5529f634332b_1_1",
+    "topic_title": "Introduction",
+    "topic_code": "1.1",
+    "cached": false,
+    "cached_at": "2026-11-16T23:59:28.499Z",
+    "cache_hits": 2,
+    "llm_provider": "NCERT Curriculum Engine (Deterministic High-Yield)",
+    "token_usage": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0
+    },
+    "summary_notes": {
+      "overview": "Authentic NCERT curriculum content for \"1.1 Introduction\" under Chapter 1: \"Electric Charges and Fields\".",
+      "core_concepts": [
+        {
+          "title": "Core Idea",
+          "detail": "Authentic NCERT curriculum content for \"1.1 Introduction\" under Chapter 1: \"Electric Charges and Fields\"."
+        },
+        {
+          "title": "Mathematical Relation",
+          "detail": "The governing relation uses $q = ne$ to connect physical properties."
+        },
+        {
+          "title": "Key Takeaway",
+          "detail": "Always check that physical quantities have matching SI units before performing calculations."
+        }
+      ],
+      "key_definitions": [
+        {
+          "term": "Introduction",
+          "definition": "Authentic NCERT curriculum content for \"1.1 Introduction\" under Chapter 1: \"Electric Charges and Fields\"."
+        }
+      ]
+    },
+    "bullet_points": {
+      "high_yield_takeaways": [
+        "Understand the physical meaning of each variable in $q = ne$.",
+        "Keep track of vector directions and coordinate signs (positive vs negative).",
+        "In board exams, writing the governing formula first awards 1 full step mark."
+      ],
+      "governing_formulas": [
+        {
+          "name": "Governing Formula",
+          "latex": "$q = ne$",
+          "note": "where $n$ is an integer and $e = 1.602 \\times 10^{-19}\\,\\text{C}$"
+        }
+      ],
+      "exam_traps": [
+        {
+          "trap": "Forgetting to convert units to SI (e.g. converting cm to m or $\\mu\\text{C}$ to $\\text{C}$)",
+          "remedy": "Convert all given values into meters ($1\\,\\text{m} = 100\\,\\text{cm}$) and Coulombs ($1\\,\\mu\\text{C} = 10^{-6}\\,\\text{C}$) before multiplying."
+        },
+        {
+          "trap": "Treating vectors as plain scalars",
+          "remedy": "Resolve quantities into $x$ and $y$ components and add vectorially."
+        }
+      ]
+    },
+    "quick_quiz": [
+      {
+        "id": "q_1.1_1",
+        "question": "Which of the following statements about \"Introduction\" is correct?",
+        "options": [
+          {
+            "key": "A",
+            "text": "Authentic NCERT curriculum content for \"1.1 Introduction\" under Chapter 1: \"Electric Charges and Fields\"."
+          },
+          {
+            "key": "B",
+            "text": "It completely violates energy and charge conservation principles."
+          },
+          {
+            "key": "C",
+            "text": "The value is always zero regardless of experimental setup."
+          },
+          {
+            "key": "D",
+            "text": "It only applies to uncharged neutral matter at absolute zero."
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "Option A is correct: \"Authentic NCERT curriculum content for \"1.1 Introduction\" under Chapter 1: \"Electric Charges and Fields\".\"."
+      },
+      {
+        "id": "q_1.1_2",
+        "question": "What is the most common mistake students make when solving numericals for \"Introduction\"?",
+        "options": [
+          {
+            "key": "A",
+            "text": "Forgetting Cartesian signs and unit conversions (e.g., cm to m)."
+          },
+          {
+            "key": "B",
+            "text": "Writing down the governing formula and checking SI units."
+          },
+          {
+            "key": "C",
+            "text": "Drawing a labelled diagram to identify vector directions."
+          },
+          {
+            "key": "D",
+            "text": "Stating the final answer with proper physical units."
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "Failing to convert prefixes like cm to m or forgetting positive/negative signs is the most common student error."
+      },
+      {
+        "id": "q_1.1_3",
+        "question": "Which governing equation applies to \"Introduction\"?",
+        "options": [
+          {
+            "key": "A",
+            "text": "$q = ne$"
+          },
+          {
+            "key": "B",
+            "text": "$PV = nRT^3$"
+          },
+          {
+            "key": "C",
+            "text": "$\\lambda = \\frac{h}{mv^2}$"
+          },
+          {
+            "key": "D",
+            "text": "$v^2 = u^2 - 4as$"
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "Option A ($q = ne$) is the correct formula for this topic."
+      }
+    ]
+  },
+  "topic_study_top_chap_book_efde2383-b9f2-44dc-b33c-5529f634332b_3_1": {
+    "topic_id": "top_chap_book_efde2383-b9f2-44dc-b33c-5529f634332b_3_1",
+    "topic_title": "Introduction",
+    "topic_code": "3.1",
+    "cached": false,
+    "cached_at": "2026-11-17T00:09:50.832Z",
+    "cache_hits": 1,
+    "llm_provider": "NCERT Curriculum Engine (Deterministic High-Yield)",
+    "token_usage": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0
+    },
+    "summary_notes": {
+      "overview": "Authentic NCERT curriculum content for \"3.1 Introduction\" under Chapter 3: \"Current Electricity\".",
+      "core_concepts": [
+        {
+          "title": "Core Idea",
+          "detail": "Authentic NCERT curriculum content for \"3.1 Introduction\" under Chapter 3: \"Current Electricity\"."
+        },
+        {
+          "title": "Mathematical Relation",
+          "detail": "The governing relation uses $q = ne$ to connect physical properties."
+        },
+        {
+          "title": "Key Takeaway",
+          "detail": "Always check that physical quantities have matching SI units before performing calculations."
+        }
+      ],
+      "key_definitions": [
+        {
+          "term": "Introduction",
+          "definition": "Authentic NCERT curriculum content for \"3.1 Introduction\" under Chapter 3: \"Current Electricity\"."
+        }
+      ]
+    },
+    "bullet_points": {
+      "high_yield_takeaways": [
+        "Understand the physical meaning of each variable in $q = ne$.",
+        "Keep track of vector directions and coordinate signs (positive vs negative).",
+        "In board exams, writing the governing formula first awards 1 full step mark."
+      ],
+      "governing_formulas": [
+        {
+          "name": "Governing Formula",
+          "latex": "$q = ne$",
+          "note": "where $n$ is an integer and $e = 1.602 \\times 10^{-19}\\,\\text{C}$"
+        }
+      ],
+      "exam_traps": [
+        {
+          "trap": "Forgetting to convert units to SI (e.g. converting cm to m or $\\mu\\text{C}$ to $\\text{C}$)",
+          "remedy": "Convert all given values into meters ($1\\,\\text{m} = 100\\,\\text{cm}$) and Coulombs ($1\\,\\mu\\text{C} = 10^{-6}\\,\\text{C}$) before multiplying."
+        },
+        {
+          "trap": "Treating vectors as plain scalars",
+          "remedy": "Resolve quantities into $x$ and $y$ components and add vectorially."
+        }
+      ]
+    },
+    "quick_quiz": [
+      {
+        "id": "q_3.1_1",
+        "question": "Which of the following statements about \"Introduction\" is correct?",
+        "options": [
+          {
+            "key": "A",
+            "text": "Authentic NCERT curriculum content for \"3.1 Introduction\" under Chapter 3: \"Current Electricity\"."
+          },
+          {
+            "key": "B",
+            "text": "It completely violates energy and charge conservation principles."
+          },
+          {
+            "key": "C",
+            "text": "The value is always zero regardless of experimental setup."
+          },
+          {
+            "key": "D",
+            "text": "It only applies to uncharged neutral matter at absolute zero."
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "Option A is correct: \"Authentic NCERT curriculum content for \"3.1 Introduction\" under Chapter 3: \"Current Electricity\".\"."
+      },
+      {
+        "id": "q_3.1_2",
+        "question": "What is the most common mistake students make when solving numericals for \"Introduction\"?",
+        "options": [
+          {
+            "key": "A",
+            "text": "Forgetting Cartesian signs and unit conversions (e.g., cm to m)."
+          },
+          {
+            "key": "B",
+            "text": "Writing down the governing formula and checking SI units."
+          },
+          {
+            "key": "C",
+            "text": "Drawing a labelled diagram to identify vector directions."
+          },
+          {
+            "key": "D",
+            "text": "Stating the final answer with proper physical units."
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "Failing to convert prefixes like cm to m or forgetting positive/negative signs is the most common student error."
+      },
+      {
+        "id": "q_3.1_3",
+        "question": "Which governing equation applies to \"Introduction\"?",
+        "options": [
+          {
+            "key": "A",
+            "text": "$q = ne$"
+          },
+          {
+            "key": "B",
+            "text": "$PV = nRT^3$"
+          },
+          {
+            "key": "C",
+            "text": "$\\lambda = \\frac{h}{mv^2}$"
+          },
+          {
+            "key": "D",
+            "text": "$v^2 = u^2 - 4as$"
+          }
+        ],
+        "correct_answer": "A",
+        "explanation": "Option A ($q = ne$) is the correct formula for this topic."
       }
     ]
   }

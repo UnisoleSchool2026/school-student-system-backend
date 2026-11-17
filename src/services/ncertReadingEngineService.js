@@ -48,6 +48,179 @@ function compareTopicCodes(a, b) {
   return 0;
 }
 
+const CANONICAL_MATH_12 = {
+  1: {
+    title: 'Relations and Functions',
+    topics: {
+      '1.1': 'Introduction',
+      '1.2': 'Types of Relations',
+      '1.3': 'Types of Functions',
+      '1.4': 'Composition of Functions and Invertible Function',
+      '1.S': 'Summary & Key Concepts',
+      '1.E': 'NCERT Chapter Exercises'
+    }
+  },
+  2: {
+    title: 'Inverse Trigonometric Functions',
+    topics: {
+      '2.1': 'Introduction',
+      '2.2': 'Basic Concepts',
+      '2.3': 'Properties of Inverse Trigonometric Functions',
+      '2.S': 'Summary & Key Concepts',
+      '2.E': 'NCERT Chapter Exercises'
+    }
+  },
+  3: {
+    title: 'Matrices',
+    topics: {
+      '3.1': 'Introduction',
+      '3.2': 'Matrix',
+      '3.3': 'Types of Matrices',
+      '3.4': 'Operations on Matrices',
+      '3.5': 'Transpose of a Matrix',
+      '3.6': 'Symmetric and Skew Symmetric Matrices',
+      '3.7': 'Invertible Matrices',
+      '3.S': 'Summary & Key Concepts',
+      '3.E': 'NCERT Chapter Exercises'
+    }
+  },
+  4: {
+    title: 'Determinants',
+    topics: {
+      '4.1': 'Introduction',
+      '4.2': 'Determinant',
+      '4.3': 'Properties of Determinants',
+      '4.4': 'Area of a Triangle',
+      '4.5': 'Minors and Cofactors',
+      '4.6': 'Adjoint and Inverse of a Matrix',
+      '4.7': 'Applications of Determinants and Matrices',
+      '4.S': 'Summary & Key Concepts',
+      '4.E': 'NCERT Chapter Exercises'
+    }
+  },
+  5: {
+    title: 'Continuity and Differentiability',
+    topics: {
+      '5.1': 'Introduction',
+      '5.2': 'Continuity',
+      '5.3': 'Differentiability',
+      '5.4': 'Exponential and Logarithmic Functions',
+      '5.5': 'Logarithmic Differentiation',
+      '5.6': 'Derivatives of Functions in Parametric Forms',
+      '5.7': 'Second Order Derivative',
+      '5.8': 'Mean Value Theorem',
+      '5.S': 'Summary & Key Concepts',
+      '5.E': 'NCERT Chapter Exercises'
+    }
+  },
+  6: {
+    title: 'Applications of Derivatives',
+    topics: {
+      '6.1': 'Introduction',
+      '6.2': 'Rate of Change of Quantities',
+      '6.3': 'Increasing and Decreasing Functions',
+      '6.4': 'Tangents and Normals',
+      '6.5': 'Approximations',
+      '6.6': 'Maxima and Minima',
+      '6.S': 'Summary & Key Concepts',
+      '6.E': 'NCERT Chapter Exercises'
+    }
+  },
+  7: {
+    title: 'Integrals',
+    topics: {
+      '7.1': 'Introduction',
+      '7.2': 'Integration as an Inverse Process of Differentiation',
+      '7.3': 'Methods of Integration',
+      '7.4': 'Integrals of some Particular Functions',
+      '7.5': 'Integration by Partial Fractions',
+      '7.6': 'Integration by Parts',
+      '7.7': 'Definite Integral',
+      '7.8': 'Fundamental Theorem of Calculus',
+      '7.9': 'Evaluation of Definite Integrals by Substitution',
+      '7.10': 'Some Properties of Definite Integrals',
+      '7.S': 'Summary & Key Concepts',
+      '7.E': 'NCERT Chapter Exercises'
+    }
+  },
+  8: {
+    title: 'Applications of Integrals',
+    topics: {
+      '8.1': 'Introduction',
+      '8.2': 'Area under Simple Curves',
+      '8.3': 'Area between Two Curves',
+      '8.S': 'Summary & Key Concepts',
+      '8.E': 'NCERT Chapter Exercises'
+    }
+  },
+  9: {
+    title: 'Differential Equations',
+    topics: {
+      '9.1': 'Introduction',
+      '9.2': 'Basic Concepts',
+      '9.3': 'General and Particular Solutions of a Differential Equation',
+      '9.4': 'Formation of a Differential Equation whose General Solution is given',
+      '9.5': 'Methods of Solving First Order, First Degree Differential Equations',
+      '9.S': 'Summary & Key Concepts',
+      '9.E': 'NCERT Chapter Exercises'
+    }
+  },
+  10: {
+    title: 'Vector Algebra',
+    topics: {
+      '10.1': 'Introduction',
+      '10.2': 'Some Basic Concepts',
+      '10.3': 'Types of Vectors',
+      '10.4': 'Addition of Vectors',
+      '10.5': 'Multiplication of a Vector by a Scalar',
+      '10.6': 'Product of Two Vectors',
+      '10.S': 'Summary & Key Concepts',
+      '10.E': 'NCERT Chapter Exercises'
+    }
+  },
+  11: {
+    title: 'Three-Dimensional Geometry',
+    topics: {
+      '11.1': 'Introduction',
+      '11.2': 'Direction Cosines and Direction Ratios of a Line',
+      '11.3': 'Equation of a Line in Space',
+      '11.4': 'Angle between Two Lines',
+      '11.5': 'Shortest Distance between Two Lines',
+      '11.6': 'Plane',
+      '11.7': 'Coplanarity of Two Lines',
+      '11.8': 'Angle between Two Planes',
+      '11.9': 'Distance of a Point from a Plane',
+      '11.10': 'Angle between a Line and a Plane',
+      '11.S': 'Summary & Key Concepts',
+      '11.E': 'NCERT Chapter Exercises'
+    }
+  },
+  12: {
+    title: 'Linear Programming',
+    topics: {
+      '12.1': 'Introduction',
+      '12.2': 'Linear Programming Problem and its Mathematical Formulation',
+      '12.3': 'Different Types of Linear Programming Problems',
+      '12.S': 'Summary & Key Concepts',
+      '12.E': 'NCERT Chapter Exercises'
+    }
+  },
+  13: {
+    title: 'Probability',
+    topics: {
+      '13.1': 'Introduction',
+      '13.2': 'Conditional Probability',
+      '13.3': 'Multiplication Theorem on Probability',
+      '13.4': 'Independent Events',
+      '13.5': 'Bayes\' Theorem',
+      '13.6': 'Random Variables and its Probability Distributions',
+      '13.7': 'Bernoulli Trials and Binomial Distribution',
+      '13.S': 'Summary & Key Concepts',
+      '13.E': 'NCERT Chapter Exercises'
+    }
+  }
+};
+
 const CANONICAL_PHYSICS_12 = {
   1: {
     title: 'Electric Charges and Fields',
@@ -233,6 +406,13 @@ const CANONICAL_PHYSICS_12 = {
     }
   }
 };
+
+function resolveSubjectSyllabus(subject, classNo) {
+  const s = String(subject || '').toLowerCase().trim();
+  if (s.includes('math')) return CANONICAL_MATH_12;
+  if (s.includes('physic') || s === 'phy') return CANONICAL_PHYSICS_12;
+  return null;
+}
 
 function repairKerning(str) {
   if (!str) return '';
@@ -702,14 +882,31 @@ Key Pedagogical Summary:
         });
       }
 
-      for (let i = 0; i < chapterIndices.length; i++) {
-        const cur = chapterIndices[i];
-        const next = chapterIndices[i + 1];
+      // Deduplicate chapters by chapter number (filters out TOC pages repeating "Chapter 1 Relations... 1 - 32")
+      const seenNos = new Set();
+      const activeChapters = [];
+      for (const ch of chapterIndices) {
+        if (/\d+\s*-\s*\d+\s*$/.test(ch.title)) continue; // Skip table of contents page ranges
+        if (!seenNos.has(ch.no)) {
+          seenNos.add(ch.no);
+          activeChapters.push(ch);
+        }
+      }
+      activeChapters.sort((a, b) => a.no - b.no);
+
+      const chaptersToProcess = activeChapters.length > 0 ? activeChapters : chapterIndices;
+      const subjectSyllabus = resolveSubjectSyllabus(meta.subject, meta.class_no);
+
+      for (let i = 0; i < chaptersToProcess.length; i++) {
+        const cur = chaptersToProcess[i];
+        const next = chaptersToProcess[i + 1];
         const chText = cleanedText.slice(cur.index, next ? next.index : undefined);
 
-        const canon = CANONICAL_PHYSICS_12[cur.no];
+        const canon = subjectSyllabus ? subjectSyllabus[cur.no] : null;
         if (canon) {
           cur.title = canon.title;
+        } else {
+          cur.title = repairKerning(cur.title);
         }
 
         // Detect topic sections e.g. "1.1 Title", "1.2 Title", "1.2.1 Title"
@@ -723,7 +920,7 @@ Key Pedagogical Summary:
           if (isNoiseHeading(code, rawTitle, cur.no)) {
             continue;
           }
-          if (canon && canon.topics[code]) {
+          if (canon && canon.topics && canon.topics[code]) {
             rawTitle = canon.topics[code];
           } else {
             rawTitle = repairKerning(rawTitle);
@@ -783,7 +980,7 @@ Key Pedagogical Summary:
         }
 
         // If canonical syllabus is available, ensure all canonical sections exist
-        if (canon) {
+        if (canon && canon.topics) {
           for (const [cCode, cTitle] of Object.entries(canon.topics)) {
             if (!codeMap.has(cCode)) {
               codeMap.set(cCode, {
