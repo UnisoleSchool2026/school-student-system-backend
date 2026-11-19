@@ -1,20 +1,17 @@
 // ============================================================================
-// MODULE: NCERT Core & Reading Engine
-// Reference: https://github.com/moktagithub005/Ncert_reading_engine
-// Powers the NCERT menu with the authentic NCERT Reading Engine:
-// - Book ingestion & processing status
-// - Active book chapter & topic hierarchy tree
-// - Full text viewer & extraction details
+// MODULE: NCERT Core
+// The NCERT tab itself is the NCERT book reader (frontend js/ncertReader.js,
+// backend /api/ncert-library). This module only reports the chapter list and the
+// NCERT question sets (exercise / solved example / exemplar) per chapter.
 // ============================================================================
 
 const content = require('../services/canonicalContentService');
-const ncertEngine = require('../services/ncertReadingEngineService');
 const { resolveSubject, getTaxonomyChapters, chapterKey, recordsForChapter, emptyPayload } = require('./shared');
 
 const MODULE = {
   id: 'ncert_core',
-  title: 'NCERT Core & Reading Engine',
-  description: 'NCERT section-wise concepts and Reading Engine digitization.',
+  title: 'NCERT',
+  description: 'NCERT books and NCERT question sets.',
   featureFlag: 'ncertExemplar',
   modes: ['BOARD', 'COMPETITIVE'],
   roles: ['teacher', 'student']
@@ -67,37 +64,10 @@ function build(ctx) {
     exemplar: chRecords.filter(r => r.source_raw.includes('EXEMPLAR') || /EXEMPLAR/i.test(r.pyq_appearance || '')).map(asItem)
   };
 
-  // Also include authentic Reading Engine state
-  const allBooks = ncertEngine.listBooks();
-  let matchedBook = null;
-  if (grade) {
-    matchedBook = allBooks.find(b => String(b.class_no) === String(grade) && (
-      (subjectKey && (b.subject.toLowerCase().includes(subjectKey.toLowerCase()) || subjectKey.toLowerCase().includes(b.subject.toLowerCase())))
-    ));
-    if (!matchedBook) {
-      matchedBook = allBooks.find(b => String(b.class_no) === String(grade));
-    }
-  }
-  if (!matchedBook && allBooks.length > 0) matchedBook = allBooks[0];
-  const activeBookId = ctx.bookId || (matchedBook ? matchedBook.id : null);
-  let activeBookTree = null;
-  let firstTopic = null;
-  if (activeBookId) {
-    try {
-      activeBookTree = ncertEngine.getBookTree(activeBookId, true);
-      if (activeBookTree && activeBookTree.chapters && activeBookTree.chapters.length > 0) {
-        const ch0 = activeBookTree.chapters[0];
-        if (ch0 && ch0.topics && ch0.topics.length > 0) {
-          firstTopic = ncertEngine.getTopic(ch0.topics[0].id);
-        }
-      }
-    } catch (e) {}
-  }
-
   return {
     moduleId: MODULE.id,
-    title: 'NCERT Reading Engine',
-    subtitle: 'Textbook Ingestion, Chapter-wise Topics & Extracted Reading Content',
+    title: 'NCERT',
+    subtitle: 'NCERT books and question sets',
     mode: ctx.mode,
     track: ctx.track,
     empty: false,
@@ -125,13 +95,6 @@ function build(ctx) {
           exemplar: { count: ncertSets.exemplar.length, items: ncertSets.exemplar.slice(0, 15) }
         },
         traps: isComp ? collectTraps(ch, chRecords) : []
-      },
-      readingEngine: {
-        isReadingEngine: true,
-        books: allBooks,
-        activeBookId,
-        activeBookTree,
-        firstTopic
       }
     }
   };

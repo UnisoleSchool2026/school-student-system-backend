@@ -59,16 +59,26 @@ async function listModels(key = apiKey()) {
   if (listCache.models && listCache.key === key && Date.now() - listCache.at < LIST_TTL_MS) return listCache.models;
   try {
     const body = await fetchJson(`${apiBase()}/v1beta/models?pageSize=200&key=${encodeURIComponent(key)}`, {}, 10000);
-    const models = (body && body.models ? body.models : [])
-      .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
-      .map(m => String(m.name || '').replace(/^models\//, ''))
-      .filter(Boolean);
-    listCache = { at: Date.now(), key, models };
+    const all = body && body.models ? body.models : [];
+    const names = list => list.map(m => String(m.name || '').replace(/^models\//, '')).filter(Boolean);
+    const models = names(all.filter(m => (m.supportedGenerationMethods || []).includes('generateContent')));
+    const live = names(all.filter(m => (m.supportedGenerationMethods || []).includes('bidiGenerateContent')));
+    listCache = { at: Date.now(), key, models, live };
     return models;
   } catch (err) {
     console.warn('[GEMINI] Could not list models:', err.message);
     return [];
   }
+}
+
+// The voice-teacher model this key can use: a native-audio Live model, the proven 2.5 one first.
+async function liveModelFor(key = apiKey()) {
+  await listModels(key);
+  const live = (listCache.key === key && listCache.live) || [];
+  const audio = live.filter(n => /native-audio/.test(n) && !/thinking/.test(n));
+  const rank = n => (versionOf(n) === 2.5 ? 100 : 60 - Math.abs(versionOf(n) - 3)) + (/latest/.test(n) ? 3 : 0) - (/preview/.test(n) ? 1 : 0);
+  const pick = audio.sort((a, b) => rank(b) - rank(a))[0] || live.find(n => /flash/.test(n));
+  return pick || null;
 }
 
 function versionOf(name) {
@@ -77,21 +87,33 @@ function versionOf(name) {
 }
 
 // Ranks general-purpose Gemini models for a job ("vision" reads photos, "text" writes lessons).
+// Ranks general-purpose Gemini models. Older, proven "flash" models come first: they answer
+// fastest and are rarely overloaded. The newest models are tried after them, "pro" last.
 function rankModels(names, kind) {
   const usable = names.filter(n => /^gemini/.test(n) && !/(tts|image|embedding|live|audio|robotics|computer-use|aqa|learnlm|gemma)/.test(n));
   const score = n => {
-    let s = versionOf(n) * 10;
-    if (/flash/.test(n)) s += 6;
-    if (/pro/.test(n)) s += kind === 'vision' ? 5 : 3;
-    if (/lite/.test(n)) s -= 6;
-    if (/latest/.test(n)) s += 2;
-    // Stable models first: previews are slower, change without notice and have small quotas.
-    if (/(preview|exp|experimental)/.test(n)) s -= 15;
+    const v = versionOf(n);
+    let s;
+    if (/pro/.test(n)) s = kind === 'vision' ? 45 : 30;
+    else if (/lite/.test(n)) s = 50;
+    else if (v === 2.5) s = 100;
+    else if (v === 2) s = 90;
+    else if (/flash-latest/.test(n)) s = 80;
+    else if (/flash/.test(n)) s = 70 - Math.max(0, v - 3) * 2; // newer flash: after the proven ones
+    else s = 20;
+    if (/(preview|exp|experimental)/.test(n)) s -= 25;
     if (/-\d{3,}$/.test(n)) s -= 1; // pinned dated builds rank just below their alias
     return s;
   };
   return usable.sort((a, b) => score(b) - score(a));
 }
+
+// A model that was overloaded or too slow is skipped for a few minutes.
+const resting = new Map();
+function rest(model, err) {
+  if (err && (err.status === 503 || err.status === 429 || err.status === 504 || /timed out/i.test(err.message))) resting.set(model, Date.now() + 5 * 60000);
+}
+function isResting(model) { const t = resting.get(model); return Boolean(t && t > Date.now()); }
 
 async function modelsFor(kind, key = apiKey()) {
   const override = kind === 'vision' ? process.env.GEMINI_VISION_MODEL : (process.env.GEMINI_TEXT_MODEL || process.env.GEMINI_MODEL);
@@ -101,7 +123,8 @@ async function modelsFor(kind, key = apiKey()) {
     const name = String(m || '').replace(/^models\//, '').trim();
     if (name && order.indexOf(name) === -1) order.push(name);
   });
-  return order.slice(0, 4);
+  const awake = order.filter(m => !isResting(m));
+  return (awake.length ? awake : order).slice(0, 4);
 }
 
 // Parses JSON a model returned, tolerating ```json fences and text around the object.
@@ -140,6 +163,8 @@ async function generateJson({ parts, systemInstruction, kind = 'text', temperatu
   for (const model of models) {
     const left = deadline - Date.now();
     if (left < 3000) break;
+    // No single model may use up all the time: leave room to try the next one.
+    const perModel = Math.min(left, kind === 'vision' ? 22000 : 14000);
     try {
       const body = {
         contents: [{ role: 'user', parts }],
@@ -149,7 +174,7 @@ async function generateJson({ parts, systemInstruction, kind = 'text', temperatu
       if (thinking) body.generationConfig.thinkingConfig = thinking;
       if (systemInstruction) body.systemInstruction = { parts: [{ text: systemInstruction }] };
       const url = `${apiBase()}/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
-      const post = b => fetchJson(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) }, Math.max(3000, deadline - Date.now()));
+      const post = b => fetchJson(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) }, perModel);
       let json;
       try {
         json = await post(body);
@@ -164,6 +189,7 @@ async function generateJson({ parts, systemInstruction, kind = 'text', temperatu
       return { data: parseModelJson(raw), model };
     } catch (err) {
       lastError = err;
+      rest(model, err);
       console.warn(`[GEMINI] ${model} failed: ${err.message}`);
       if (err.status === 401 || err.status === 403) break; // bad key: other models will fail the same way
     }
@@ -178,4 +204,4 @@ function inlinePart(dataUrl, fallbackMime = 'image/jpeg') {
   return { inlineData: { mimeType: m ? m[1] : fallbackMime, data: m ? m[2] : s } };
 }
 
-module.exports = { apiBase, apiKey, listModels, rankModels, modelsFor, generateJson, parseModelJson, inlinePart };
+module.exports = { apiBase, apiKey, listModels, liveModelFor, rankModels, modelsFor, generateJson, parseModelJson, inlinePart };

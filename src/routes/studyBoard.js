@@ -14,6 +14,7 @@ const board = require('../services/studyBoardService');
 const handle = require('./_handle');
 
 router.get('/catalog', handle('STUDY BOARD', req => board.catalog(req.query)));
+router.post('/lesson-from-text', handle('STUDY BOARD', req => ({ lesson: board.textLesson(req.body || {}) })));
 router.get('/lesson', handle('STUDY BOARD', async req => ({ lesson: await board.lesson(req.query) })));
 router.get('/practice', handle('STUDY BOARD', req => board.practiceNext(req.query)));
 router.post('/practice/hint', handle('STUDY BOARD', req => board.hint(req.body || {})));

@@ -31,8 +31,11 @@ function clip(text, max) {
   return String(text || '').replace(/[\u0000-\u0008\u000b-\u001f]/g, ' ').slice(0, max);
 }
 
-function liveModel() {
-  const raw = process.env.GEMINI_LIVE_MODEL || 'gemini-2.5-flash-native-audio-latest';
+// GEMINI_LIVE_MODEL pins it; otherwise the native-audio model this key offers is found (ListModels).
+async function liveModel() {
+  let raw = process.env.GEMINI_LIVE_MODEL;
+  if (!raw && !process.env.GEMINI_LIVE_WS_BASE) { try { raw = await require('./geminiClient').liveModelFor(); } catch (e) { raw = null; } }
+  raw = raw || 'gemini-2.5-flash-native-audio-latest';
   return raw.startsWith('models/') ? raw : `models/${raw}`;
 }
 
@@ -125,11 +128,15 @@ async function liveToken() {
 // Builds everything the browser needs to open a live voice session.
 async function liveSession(params = {}) {
   const user = studyBoard.resolveUser(params);
-  const subject = studyBoard.assertSubject(user, params.subjectKey);
-  let chapterName = '';
+  // A lesson opened from the NCERT book has no syllabus subject: it is taught from the book text
+  // (sent in the outline) under the book's subject name.
+  const subject = params.subjectKey
+    ? studyBoard.assertSubject(user, params.subjectKey)
+    : { key: '', name: clip(params.subjectName, 60) || 'NCERT' };
+  let chapterName = params.subjectKey ? '' : clip(params.chapterName, 160);
   let topicName = clip(params.topicTitle, 120);
   let grade = '';
-  if (params.chapterId) {
+  if (params.chapterId && subject.key) {
     const found = studyBoard.findTopic(subject.key, params.chapterId, params.topicId);
     if (found.chapter) { chapterName = found.chapter.chapterName; grade = found.chapter.grade || ''; }
     if (found.topic) topicName = found.topic.topicName;
@@ -138,7 +145,7 @@ async function liveSession(params = {}) {
   const voice = VOICES[params.voice] || VOICES.female;
   const wsUrl = await liveToken();
   const setup = {
-    model: liveModel(),
+    model: await liveModel(),
     generationConfig: {
       responseModalities: ['AUDIO'],
       speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } },

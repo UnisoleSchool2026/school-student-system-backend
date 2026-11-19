@@ -89,8 +89,8 @@ const server = http.createServer((req, res) => {
       const text = parts.map(p => p.text || '').join('\n') + '\n' + (((body.systemInstruction || {}).parts || [])[0] || {}).text;
       log({ kind: 'generate', model, images, chars: text.length, key: url.searchParams.get('key') ? 'set' : 'missing', textStart: text.slice(0, 160) });
       if (MISSING.has(model)) return send(res, 404, { error: { code: 404, message: `models/${model} is not found for API version v1beta` } });
-      if (images) return reply(res, visionReply(images));
       const tutorReply = tutor.forPrompt(text);
+      if (images && !tutorReply) return reply(res, visionReply(images));
       if (tutorReply) return reply(res, tutorReply);
       return reply(res, { questions: [] });
     });

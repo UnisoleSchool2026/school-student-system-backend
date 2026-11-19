@@ -1,7 +1,7 @@
 // ============================================================================
 // Runtime data files
 // ----------------------------------------------------------------------------
-// Files the server changes while it runs (uploaded NCERT books, AI study-aid
+// Files the server changes while it runs (NCERT library books and AI-help
 // cache, teacher DPPs, teacher-added questions) are written to DATA_DIR
 // (default: backend/data, ignored by git). The JSON files committed under
 // src/database are only the starting data and are never written at runtime,

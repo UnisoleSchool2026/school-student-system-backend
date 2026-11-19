@@ -36,7 +36,7 @@ const doubtsRouter = require('./routes/doubts');
 const noticesRouter = require('./routes/notices');
 const mistakesRouter = require('./routes/mistakes');
 const tutorRouter = require('./routes/tutor');
-const ncertReadingEngineRouter = require('./routes/ncertReadingEngine');
+const ncertLibraryRouter = require('./routes/ncertLibrary');
 
 const app = express();
 app.disable('x-powered-by');
@@ -77,10 +77,7 @@ app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 // Per-IP limits: generous for normal use, stricter for routes that call AI services or read uploads.
 app.use('/api', rateLimit({ windowMs: 60000, max: Number(process.env.RATE_LIMIT_PER_MINUTE) || 600, name: 'general' }));
 const costlyLimiter = rateLimit({ windowMs: 60000, max: Number(process.env.RATE_LIMIT_AI_PER_MINUTE) || 40, name: 'ai' });
-['/api/questions/inject', '/api/questions/generate-ai', '/api/questions/generate-llm', '/api/study-board/doubt', '/api/tutor', '/api/study-board/lesson', '/api/voice-tutor', '/api/handwritten', '/api/upload'].forEach(p => app.use(p, costlyLimiter));
-// NCERT Reading Engine is mounted at /api/v1 and /v1: /v1 also gets the general limit; PDF upload and AI study aids are costly.
-app.use('/v1', rateLimit({ windowMs: 60000, max: Number(process.env.RATE_LIMIT_PER_MINUTE) || 600, name: 'general-v1' }));
-app.use(/^\/(?:api\/)?v1\/admin\/(?:books\/upload|topics\/[^/]+\/ai-study)/, costlyLimiter);
+['/api/questions/inject', '/api/questions/generate-ai', '/api/questions/generate-llm', '/api/study-board/doubt', '/api/tutor', '/api/study-board/lesson', '/api/ncert-library/ai', '/api/voice-tutor', '/api/handwritten', '/api/upload'].forEach(p => app.use(p, costlyLimiter));
 // Save changed school data to PostgreSQL after every request that can change it.
 app.use(persistence.middleware);
 
@@ -166,9 +163,7 @@ app.use('/api/doubts', doubtsRouter);
 app.use('/api/notices', noticesRouter);
 app.use('/api/mistakes', mistakesRouter);
 app.use('/api/tutor', tutorRouter);
-// NCERT Reading Engine API (https://github.com/moktagithub005/Ncert_reading_engine)
-app.use('/api/v1', ncertReadingEngineRouter);
-app.use('/v1', ncertReadingEngineRouter);
+app.use('/api/ncert-library', ncertLibraryRouter);
 
 // Standalone Backend API Gateway Root
 app.get('/', (req, res) => {

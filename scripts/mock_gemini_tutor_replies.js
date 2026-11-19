@@ -39,6 +39,13 @@ const DOUBT = {
 function forPrompt(text) {
   if (/"hook"/.test(text) && /"main_diagram"/.test(text)) return LESSON;
   if (/Student's question/.test(text)) return DOUBT;
+  // NCERT reader help (2026-11-19)
+  if (/Summarise this NCERT text/.test(text)) return { title: 'Electric charge in short', points: ['Charge is a basic property of matter.', 'Like charges repel; unlike charges attract.', 'The SI unit of charge is the coulomb (C).', 'Charge is conserved and quantised: $q = ne$.'], terms: [{ term: 'Quantisation', meaning: 'Charge comes only in whole-number multiples of $e$.' }], formulas: ['$q = ne$'] };
+  if (/Explain this NCERT text/.test(text)) return { title: 'What is charge?', simple: ['Rub a comb on dry hair and it pulls bits of paper.', 'That pulling comes from electric charge.', 'There are two kinds: positive and negative.'], example: 'A balloon rubbed on a sweater sticks to the wall.', remember: 'Like repel, unlike attract.' };
+  if (/^The image is a figure/.test(text) && /Explain the FIGURE/.test(text)) return { title: 'Two charges and the line joining them', what: 'The figure shows a positive and a negative charge and the force between them.', parts: [{ label: '+q', meaning: 'a positive charge' }, { label: '-q', meaning: 'a negative charge' }], steps: ['Find the two charges.', 'The line shows they pull each other.', 'Unlike charges attract.'], remember: 'Unlike charges attract.' };
+  if (/^The image is a figure/.test(text) && /MCQs/.test(text)) return { questions: [{ q: 'What does the figure show?', options: ['Two attracting charges', 'A lens', 'A circuit', 'A wave'], answer: 0, why: 'A +q and a -q joined by a line.' }] };
+  if (/^The image is a figure/.test(text) && /The student asks/.test(text)) return { title: 'Your question', simple: ['They attract because the charges are unlike.'], example: '', remember: 'Unlike charges attract.' };
+  if (/Make a quiz ONLY from this NCERT text/.test(text)) return { questions: [{ q: 'What is the SI unit of charge?', options: ['Ampere', 'Coulomb', 'Volt', 'Ohm'], answer: 1, why: 'The text says charge is measured in coulomb.' }, { q: 'Two positive charges will', options: ['attract', 'repel', 'not interact', 'merge'], answer: 1, why: 'Like charges repel.' }, { q: 'Charge on a body is always', options: ['any value', 'a multiple of $e$', 'zero', 'negative'], answer: 1, why: 'Charge is quantised: $q = ne$.' }] };
   return null;
 }
 

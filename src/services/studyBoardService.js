@@ -353,6 +353,58 @@ async function lesson(params = {}) {
   return out;
 }
 
+// ------------------------------------------------- lesson from book text --
+// A lesson on any passage (e.g. text selected in the NCERT book). Opens at once with the book's own
+// sentences on the board; the detailed explanation is written in the background, cached by content.
+const textJobs = new Map();
+function textLesson(params = {}) {
+  const text = clean(params.text, 6000).replace(/\s+/g, ' ');
+  // A figure (cropped from the book page) may come with the nearby text as context.
+  const image = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(String(params.image || '')) && String(params.image).length < 1600000 ? String(params.image) : '';
+  if (text.length < 40 && !image) throw fail(400, 'Select a little more text (at least a sentence or two).');
+  const title = clean(params.title, 120) || 'From your NCERT book';
+  const where = clean(params.source, 160);
+  const lang = LANGUAGES[params.language] ? params.language : 'en';
+  const id = 'txt_' + require('crypto').createHash('sha1').update(lang + '|' + text + '|' + image).digest('hex').slice(0, 20);
+  const sents = text.split(/(?<=[.?!])\s+(?=[A-Z0-9(])/).map(x => x.trim()).filter(Boolean);
+  const frames = [{ kind: 'intro', title, lines: [{ t: 'point', v: image ? 'A lesson on the figure you selected from the book.' : 'A lesson on the part of the book you selected.' }].concat(where ? [{ t: 'note', v: where }] : []) }];
+  for (let i = 0; i < sents.length && frames.length < (image ? 2 : 7); i += 5) {
+    frames.push({ kind: 'ideas', title: image ? 'What the book says near this figure' : (i ? 'What the book says (continued)' : 'What the book says'), lines: sents.slice(i, i + 5).map(v => ({ t: 'point', v: v.slice(0, 400) })) });
+  }
+  const out = { topicId: id, chapterId: '', subjectKey: clean(params.subjectKey, 40).toUpperCase(), subjectName: clean(params.subjectName, 60) || 'NCERT', chapterName: where || 'NCERT book', title, temporary: true, frames };
+  const note = coll('lessonNotes').find(n => n.id === id && n.version === 2);
+  if (note && note.data) {
+    const ex = explanationFrames(note.data);
+    if (ex.frames.length) { out.frames = [frames[0]].concat(ex.frames, frames.slice(1)); out.explained = true; }
+    if (ex.remember.length) out.frames.push({ kind: 'mistakes', title: 'Remember for the exam', lines: ex.remember });
+    return out;
+  }
+  if (aiEnabled()) {
+    const job = textJobs.get(id);
+    if (!job || (job.failedAt && Date.now() - job.failedAt > 120000)) {
+      textJobs.set(id, { at: Date.now() });
+      const keys = lessonPrompt({ name: '' }, { chapterName: '' }, { topicName: title, subtopics: [] });
+      callAi({
+        system: LESSON_SYSTEM + `\nWrite the board lines in ${LANGUAGES[lang].write}.`,
+        user: (image
+          ? `Teach the attached figure from the student's NCERT textbook${where ? ` (${where})` : ''}: what it shows, every labelled part, and the idea behind it. Text printed near it on the page, for context:\n<<<${text.slice(0, 2500)}>>>\n\n`
+          : `Teach this passage from the student's NCERT textbook${where ? ` (${where})` : ''}. Stay with what the passage teaches.\nPassage:\n<<<${text}>>>\n\n`) + keys.slice(keys.indexOf(diagrams.DIAGRAM_GUIDE)),
+        image: image || undefined,
+        timeoutMs: 40000
+      }).then(data => {
+        if (!(data && Array.isArray(data.simple) && data.simple.length)) throw new Error('empty explanation');
+        coll('lessonNotes').push({ id, version: 2, subjectKey: out.subjectKey, data, at: new Date().toISOString() });
+        textJobs.delete(id);
+      }).catch(err => {
+        console.warn('[STUDY BOARD] Passage explanation unavailable:', err.message);
+        textJobs.set(id, { failedAt: Date.now() });
+      });
+    }
+    if (!(textJobs.get(id) || {}).failedAt) out.aiPending = true;
+  }
+  return out;
+}
+
 // -------------------------------------------------------------- practice --
 function practiceNext(params = {}) {
   const user = resolveUser(params);
@@ -583,4 +635,4 @@ const LANGUAGES = {
   hi: { name: 'Hindi', write: 'Write in simple Hindi in Devanagari script; keep formulas, symbols and units in standard notation.', speak: 'Speak in simple, natural Hindi; say formulas and units the way Hindi-medium teachers do, keeping common English technical words where students use them.' }
 };
 
-module.exports = { catalog, lesson, practiceNext, hint, check, doubt, setProgress, splitSolution, aiEnabled, LANGUAGES, resolveUser, assertSubject, findTopic };
+module.exports = { catalog, lesson, textLesson, practiceNext, hint, check, doubt, setProgress, splitSolution, aiEnabled, LANGUAGES, resolveUser, assertSubject, findTopic };
