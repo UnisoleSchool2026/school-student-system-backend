@@ -248,6 +248,26 @@ router.post('/generate-llm', async (req, res) => {
 });
 
 // POST /api/questions/inject/preview - AI extraction & auto-categorization for review before committing
+// Figures cropped from uploaded photos (referenced in question text as [[figure:<id>]]).
+router.post('/figures', (req, res) => {
+  try {
+    const figureService = require('../services/questionFigureService');
+    const saved = figureService.save({ dataUrl: req.body && req.body.dataUrl, teacherSubjectKey: req.body && req.body.teacherSubjectKey, description: req.body && req.body.description });
+    return res.status(201).json({ success: true, ...saved });
+  } catch (err) {
+    return res.status(err.status || 500).json({ success: false, error: err.message });
+  }
+});
+
+router.get('/figures/:id', (req, res) => {
+  const fig = require('../services/questionFigureService').get(req.params.id);
+  if (!fig) return res.status(404).json({ success: false, error: 'Figure not found.' });
+  res.setHeader('Content-Type', fig.mime);
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  return res.end(fig.bytes);
+});
+
 router.post('/inject/preview', async (req, res) => {
   try {
     const validated = validateIngestionPayload(req.body);
@@ -286,6 +306,7 @@ router.post('/inject/preview', async (req, res) => {
       mode: validated.sourceType,
       rawText: validated.rawText || validated.payload || '',
       mediaData: validated.mediaData || '',
+      mediaList: validated.mediaList || [],
       mimeType: validated.mimeType || 'image/jpeg',
       targetSubject: validated.subject,
       grade: validated.grade,
@@ -410,6 +431,7 @@ router.post('/inject', async (req, res) => {
       mode: validated.sourceType,
       rawText: validated.rawText || validated.payload || '',
       mediaData: validated.mediaData || '',
+      mediaList: validated.mediaList || [],
       mimeType: validated.mimeType || 'image/jpeg',
       targetSubject: validated.subject,
       grade: validated.grade,

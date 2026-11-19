@@ -37,3 +37,6 @@ __pycache__/
 .idea/
 *.swp
 *.swo
+
+# Runtime data written by the server (see src/config/dataPaths.js)
+/data/

@@ -6,6 +6,7 @@
 // ============================================================================
 
 try { require('dotenv').config(); } catch (_) {}
+const dataPaths = require('../config/dataPaths');
 const fs = require('fs');
 const path = require('path');
 const { inMemoryStore } = require('../config/database');
@@ -613,79 +614,22 @@ function parseRawTextLocally({ rawText = '', targetSubject = 'Physics', category
 }
 
 /**
- * Multimodal extraction using Google Gemini
+ * Multimodal extraction using Google Gemini (photos of question papers, scanned PDFs).
+ * Uses the best vision model this key can use (see services/geminiClient.js).
+ * mediaList: one or more data URLs (several photos of the same paper are read together).
  */
-async function callGeminiMultimodal({ apiKey, mediaData, mimeType, promptText }) {
-  const models = ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.5-flash'];
-  let lastError = null;
-
-  let cleanData = mediaData;
-  let detectedMime = mimeType || 'image/jpeg';
-  if (cleanData.includes(';base64,')) {
-    const parts = cleanData.split(';base64,');
-    if (parts[0].startsWith('data:')) {
-      detectedMime = parts[0].replace('data:', '').trim();
-    }
-    cleanData = parts[1];
-  }
-
-  for (const model of models) {
-    try {
-      const cleanModel = model.replace(/^models\//, '');
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 35000); // 35s timeout guard for vision models
-
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${apiKey}`;
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                {
-                  inlineData: {
-                    mimeType: detectedMime || 'image/jpeg',
-                    data: cleanData
-                  }
-                },
-                {
-                  text: promptText
-                }
-              ]
-            }
-          ],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            temperature: 0.2
-          }
-        }),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Gemini Multimodal ${model} HTTP ${response.status}: ${errorText}`);
-      }
-
-      const json = await response.json();
-      const candidate = json.candidates?.[0];
-      if (!candidate || !candidate.content?.parts?.[0]?.text) {
-        throw new Error(`Gemini Multimodal ${model} returned empty candidate parts.`);
-      }
-      const rawText = candidate.content.parts[0].text;
-      return cleanAndParseJson(rawText);
-    } catch (err) {
-      lastError = err;
-      console.warn(`[INJECTION SERVICE] Gemini multimodal attempt with ${model} failed: ${err.message}. Trying next...`);
-    }
-  }
-
-  throw lastError || new Error('All Gemini multimodal model attempts failed.');
+async function callGeminiMultimodal({ apiKey, mediaData, mediaList, mimeType, promptText }) {
+  const { generateJson, inlinePart } = require('./geminiClient');
+  const list = (Array.isArray(mediaList) && mediaList.length ? mediaList : [mediaData]).filter(Boolean);
+  const parts = [];
+  list.forEach((m, i) => {
+    if (list.length > 1) parts.push({ text: `Photo ${i + 1} of ${list.length}:` });
+    parts.push(inlinePart(m, mimeType || 'image/jpeg'));
+  });
+  parts.push({ text: promptText });
+  const { data, model } = await generateJson({ parts, kind: 'vision', temperature: 0.1, timeoutMs: 90000, key: apiKey });
+  console.log(`[INJECTION SERVICE] Vision extraction answered by ${model}.`);
+  return data;
 }
 
 /**
@@ -738,6 +682,23 @@ async function callGroqTextExtraction({ apiKey, systemPrompt, userPrompt }) {
   throw lastError || new Error('All Groq extraction models failed.');
 }
 
+// Extra rules for reading photos and scans: copy what is printed, never invent, and locate figures.
+function VISION_RULES(photoCount) {
+  return `Task: read the ${photoCount > 1 ? photoCount + ' attached photos (pages of the same paper, in order)' : 'attached photo'} of a question paper, worksheet or book page and extract EVERY question on it.
+PHOTO RULES (these override the general rules above where they differ):
+- Copy each question exactly as printed or handwritten, in the same order and with its printed number. Do not reword, shorten, summarise or "improve" it.
+- The photo may be tilted, curved, shadowed, low-light or partly handwritten. Read carefully; if a word or symbol cannot be read, write [unclear] in its place. Never guess numbers or units.
+- Write all mathematics, chemical formulae, units and symbols in KaTeX ($...$). Keep subscripts, superscripts, fractions, vectors, Greek letters and units exactly.
+- Options: only if the question shows options. Copy them verbatim with their original letters (a/b/c/d or A/B/C/D, written as A-D). Do NOT invent options or distractor traps for questions that have none; use "options_latex": [] for those.
+- Answers: mark is_correct / correct_answer_latex only if an answer key is printed on the page, or you have solved it and are certain. Otherwise leave is_correct false for every option and correct_answer_latex "".
+- Marks: use the marks printed next to the question (e.g. "[2]", "(3 marks)") when visible.
+- Sub-parts (a), (b), (i), (ii) belong to the same question unless they are numbered as separate questions.
+- Ignore page headers, footers, watermarks, roll-number boxes and instructions that are not questions.
+- FIGURES: if a question has a diagram, circuit, graph, table or figure, set "has_figure": true, describe it in one line in "figure_description", say which photo it is in with "figure_image_index" (1-based) and give its tight bounding box as "figure_box_2d": [ymin, xmin, ymax, xmax] on a 0-1000 scale of that photo. Do not include the question text in the box.
+- If the photo contains no readable questions, return {"detected_question_count": 0, "questions": []}.
+Return ONLY JSON matching the schema, with the extra keys has_figure, figure_description, figure_image_index, figure_box_2d where they apply.`;
+}
+
 /**
  * AI-driven question ingestion parser supporting:
  * - mode: 'text' (raw text / LaTeX OCR)
@@ -750,11 +711,14 @@ async function processQuestionExtraction({
   mode = 'text',
   rawText = '',
   mediaData = '',
+  mediaList = [],
   mimeType = 'image/jpeg',
   targetSubject = 'Physics',
   grade = '12',
   category = 'CBSE_PYQ'
 }) {
+  const images = (Array.isArray(mediaList) ? mediaList : []).filter(m => typeof m === 'string' && m.startsWith('data:image/')).slice(0, 6);
+  if (!images.length && mediaData && String(mediaData).startsWith('data:image/')) images.push(mediaData);
   const geminiKey = (process.env.GEMINI_API_KEY || '').trim();
   const groqKey = (process.env.GROQ_API_KEY || '').trim();
 
@@ -866,13 +830,13 @@ CRITICAL MULTI-QUESTION AUTO-CATEGORIZATION DIRECTIVES:
 
   // 2. Image Mode: Use Gemini Multimodal
   let lastMultimodalError = null;
-  if (mode === 'image' && mediaData && geminiKey) {
+  if (mode === 'image' && images.length && geminiKey) {
     try {
       console.log(`[INJECTION SERVICE] Processing multimodal IMAGE via Gemini Flash...`);
-      const prompt = `${systemInstructions}\n\nTask: Extract all academic questions from the attached IMAGE document. Automatically categorize chapter, marks (1-5), and difficulty for each question. Return JSON strictly matching the requested schema.`;
+      const prompt = `${systemInstructions}\n\n${VISION_RULES(images.length)}`;
       const extracted = await callGeminiMultimodal({
         apiKey: geminiKey,
-        mediaData,
+        mediaList: images,
         mimeType: mimeType || 'image/jpeg',
         promptText: prompt
       });
@@ -1262,11 +1226,17 @@ function commitQuestionToStore({ structuredQuestion, teacher, targetSubject, gra
 /**
  * Storage paths for permanent question persistence across restarts and serverless lambdas
  */
+// Read order: runtime copy (backend/data), committed starting data, /tmp fallback.
+// Writes go to the runtime copy only (/tmp if the data folder is read-only); the committed file is never changed.
 function getCustomQuestionsStoragePaths() {
   return [
+    dataPaths.runtimePath('custom_injected_questions.json'),
     path.join(__dirname, '..', 'database', 'custom_injected_questions.json'),
     '/tmp/custom_injected_questions.json'
   ];
+}
+function getCustomQuestionsWritePaths() {
+  return [dataPaths.runtimePath('custom_injected_questions.json'), '/tmp/custom_injected_questions.json'];
 }
 
 /**
@@ -1303,17 +1273,25 @@ function savePersistedCustomQuestions(newQuestions = []) {
   newQuestions.forEach(q => { if (q && q.id) map.set(q.id, sanitizeQuestionPayload(q)); });
 
   const allQuestions = Array.from(map.values());
-  const paths = getCustomQuestionsStoragePaths();
+  // Store collection (saved to PostgreSQL by services/persistence.js when a database is configured).
+  if (!Array.isArray(inMemoryStore.injectedQuestions)) inMemoryStore.injectedQuestions = [];
+  newQuestions.forEach(q => {
+    if (!q || !q.id) return;
+    const clean = sanitizeQuestionPayload(q);
+    const at = inMemoryStore.injectedQuestions.findIndex(x => x.id === clean.id);
+    if (at === -1) inMemoryStore.injectedQuestions.push(clean); else inMemoryStore.injectedQuestions[at] = clean;
+  });
   let saved = false;
 
-  for (const p of paths) {
+  for (const p of getCustomQuestionsWritePaths()) {
     try {
       const dir = path.dirname(p);
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(p, JSON.stringify(allQuestions, null, 2), 'utf8');
       saved = true;
+      break;
     } catch (e) {
-      // Continue to next path if filesystem is read-only
+      // Try the next path if the filesystem is read-only
     }
   }
 

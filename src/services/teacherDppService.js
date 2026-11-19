@@ -20,7 +20,10 @@ const { inMemoryStore } = require('../config/database');
 const content = require('./canonicalContentService');
 const subjectScope = require('./subjectScope');
 
-const STORE_FILE = path.join(__dirname, '..', 'database', 'teacher_dpps.json');
+const dataPaths = require('../config/dataPaths');
+// Saved to backend/data/teacher_dpps.json (older versions wrote src/database/teacher_dpps.json; it is still read once if present).
+const STORE_NAME = 'teacher_dpps.json';
+const LEGACY_FILE = path.join(__dirname, '..', 'database', 'teacher_dpps.json');
 const MIN_Q = 1;
 const MAX_Q = 40;
 
@@ -33,8 +36,9 @@ function store() {
 function load() {
   store();
   try {
-    if (fs.existsSync(STORE_FILE)) {
-      const raw = JSON.parse(fs.readFileSync(STORE_FILE, 'utf8'));
+    const source = dataPaths.readPath(STORE_NAME, LEGACY_FILE);
+    if (source) {
+      const raw = JSON.parse(fs.readFileSync(source, 'utf8'));
       if (Array.isArray(raw.dpps)) inMemoryStore.teacherDpps = raw.dpps;
       if (Array.isArray(raw.attempts)) inMemoryStore.teacherDppAttempts = raw.attempts;
     }
@@ -45,7 +49,7 @@ function load() {
 
 function save() {
   try {
-    fs.writeFileSync(STORE_FILE, JSON.stringify({ dpps: inMemoryStore.teacherDpps, attempts: inMemoryStore.teacherDppAttempts }, null, 2));
+    dataPaths.writeJson(STORE_NAME, { dpps: inMemoryStore.teacherDpps, attempts: inMemoryStore.teacherDppAttempts }, true);
   } catch (err) {
     console.warn('[TEACHER DPP] Could not write teacher_dpps.json:', err.message);
   }
@@ -345,4 +349,4 @@ function submit(id, { studentId, answers = {}, timeTakenSeconds } = {}) {
 
 load();
 
-module.exports = { create, listForTeacher, teacherDetail, remove, listForStudent, studentDetail, submit, STORE_FILE };
+module.exports = { create, listForTeacher, teacherDetail, remove, listForStudent, studentDetail, submit, STORE_FILE: dataPaths.runtimePath(STORE_NAME) };
