@@ -495,16 +495,66 @@
     "question_source": "CBSE_PYQ",
     "pyq_appearance": "CBSE Board PYQ (year not tagged)",
     "difficulty": "EASY",
-    "question_format": "VERY_SHORT_ANSWER",
+    "question_format": "MCQ_SINGLE",
     "benchmark_time_seconds": 45,
     "marks_weightage": 1,
     "marks": 1,
-    "question_latex": "CBSE\nADDITIONAL PRACTICE QUESTIONS\nPhysics-Theory\nClass XII | 2023–24\nThere are 33 questions in all. All questions are compulsory.\nAn electric dipole having a dipole moment of $4 \\times 10^{-9}$ C m is placed in a\nuniform electric field such that the dipole is in stable equilibrium. If the\nmagnitude of the electric field is 3 × 103 N/C, what is the work done in\nrotating the dipole to a position of unstable equilibrium?\nA. zero\nB. $1.2 \\times 10^{-5}$ J\nC. $2.4 \\times 10^{-5}$ J\nD. - $1.2 \\times 10^{-5}$ J\n-- 1 of 17 --\n-- 2 of 17 --\n-- 3 of 17 --\n-- 4 of 17 --\n-- 5 of 17 --\n-- 6 of 17 --",
-    "options_latex": [],
-    "options": [],
-    "correct_answer_latex": "",
-    "correct_answer": null,
-    "solution_latex": "",
+    "question_latex": "An electric dipole having a dipole moment of $4 \\times 10^{-9}\\,\\text{C}\\cdot\\text{m}$ is placed in a uniform electric field such that the dipole is in stable equilibrium. If the magnitude of the electric field is $3 \\times 10^3\\,\\text{N/C}$, what is the work done in rotating the dipole to a position of unstable equilibrium?",
+    "options_latex": [
+      {
+        "key": "A",
+        "latex": "Zero",
+        "is_correct": false,
+        "distractor_trap": "Confuses net force with work done"
+      },
+      {
+        "key": "B",
+        "latex": "$1.2 \\times 10^{-5}\\,\\text{J}$",
+        "is_correct": false,
+        "distractor_trap": "Computed work for rotation to 90° instead of 180°"
+      },
+      {
+        "key": "C",
+        "latex": "$2.4 \\times 10^{-5}\\,\\text{J}$",
+        "is_correct": true,
+        "distractor_trap": null
+      },
+      {
+        "key": "D",
+        "latex": "$-1.2 \\times 10^{-5}\\,\\text{J}$",
+        "is_correct": false,
+        "distractor_trap": "Negative sign error in potential energy difference"
+      }
+    ],
+    "options": [
+      {
+        "key": "A",
+        "latex": "Zero",
+        "is_correct": false,
+        "distractor_trap": "Confuses net force with work done"
+      },
+      {
+        "key": "B",
+        "latex": "$1.2 \\times 10^{-5}\\,\\text{J}$",
+        "is_correct": false,
+        "distractor_trap": "Computed work for rotation to 90° instead of 180°"
+      },
+      {
+        "key": "C",
+        "latex": "$2.4 \\times 10^{-5}\\,\\text{J}$",
+        "is_correct": true,
+        "distractor_trap": null
+      },
+      {
+        "key": "D",
+        "latex": "$-1.2 \\times 10^{-5}\\,\\text{J}$",
+        "is_correct": false,
+        "distractor_trap": "Negative sign error in potential energy difference"
+      }
+    ],
+    "correct_answer_latex": "$2.4 \\times 10^{-5}\\,\\text{J}$",
+    "correct_answer": "C",
+    "solution_latex": "Work done in rotating dipole from stable equilibrium ($\\theta_1 = 0^\\circ$) to unstable equilibrium ($\\theta_2 = 180^\\circ$) is $$W = -pE(\\cos 180^\\circ - \\cos 0^\\circ) = 2pE = 2 \\times (4 \\times 10^{-9}\\,\\text{C}\\cdot\\text{m}) \\times (3 \\times 10^3\\,\\text{N/C}) = 2.4 \\times 10^{-5}\\,\\text{J}$$.",
     "socratic_hints": [
       "Recall the fundamental governing principles of Electric Charges and Fields.",
       "Carefully check the units and dimensional consistency before substituting numerical values.",
@@ -3074,12 +3124,12 @@
     "benchmark_time_seconds": 225,
     "marks_weightage": 5,
     "marks": 5,
-    "question_latex": "(a) A camera usually operates at 1.5 V and this potential difference is not\nsufficient to emit light energy using flash. For this purpose, the flash circuit of\nthe camera has a capacitor that is charged to 300 V-330 V using various\nelectrical components. If the voltage generated across the plates of the\ncapacitor is 300 V and the capacitance of the parallel plate capacitor used is",
+    "question_latex": "(a) A camera usually operates at 1.5 V and this potential difference is not sufficient to emit light energy using flash. For this purpose, the flash circuit of the camera has a capacitor that is charged to 300 V–330 V using various electrical components. If the voltage generated across the plates of the capacitor is 300 V and the capacitance of the parallel plate capacitor used is $100\\,\\mu\\text{F}$, find: (i) the charge stored on the capacitor plates, and (ii) the energy released when the trigger button on the camera is pressed.",
     "options_latex": [],
     "options": [],
     "correct_answer_latex": "",
     "correct_answer": null,
-    "solution_latex": "",
+    "solution_latex": "(i) Charge stored: $$Q = C V = (100 \\times 10^{-6}\\,\\text{F}) \\times (300\\,\\text{V}) = 3 \\times 10^{-2}\\,\\text{C} = 0.03\\,\\text{C}$$. (ii) Energy released: $$E = \\frac{1}{2} C V^2 = \\frac{1}{2} \\times (100 \\times 10^{-6}\\,\\text{F}) \\times (300\\,\\text{V})^2 = 4.5\\,\\text{J}$$.",
     "socratic_hints": [
       "Recall the fundamental governing principles of Electrostatic Potential and Capacitance.",
       "Carefully check the units and dimensional consistency before substituting numerical values.",
@@ -3270,16 +3320,66 @@
     "question_source": "CBSE_PYQ",
     "pyq_appearance": "CBSE Board PYQ (year not tagged)",
     "difficulty": "MEDIUM",
-    "question_format": "CASE_BASED",
+    "question_format": "MCQ_SINGLE",
     "benchmark_time_seconds": 45,
     "marks_weightage": 1,
     "marks": 1,
-    "question_latex": "μF, then find the energy released when the trigger button on the camera is\npressed.",
-    "options_latex": [],
-    "options": [],
-    "correct_answer_latex": "",
-    "correct_answer": null,
-    "solution_latex": "",
+    "question_latex": "A camera usually operates at 1.5 V and this potential difference is not sufficient to emit light energy using flash. For this purpose, the flash circuit of the camera has a capacitor that is charged to 300 V–330 V using various electrical components. If the voltage generated across the plates of the capacitor is 300 V and the capacitance of the parallel plate capacitor used is $100\\,\\mu\\text{F}$, find the energy released when the trigger button on the camera is pressed.",
+    "options_latex": [
+      {
+        "key": "A",
+        "latex": "$4.5\\,\\text{J}$",
+        "is_correct": true,
+        "distractor_trap": null
+      },
+      {
+        "key": "B",
+        "latex": "$0.45\\,\\text{J}$",
+        "is_correct": false,
+        "distractor_trap": "Power-of-10 or unit conversion arithmetic slip"
+      },
+      {
+        "key": "C",
+        "latex": "$45\\,\\text{J}$",
+        "is_correct": false,
+        "distractor_trap": "Omitted factor of 10 in microfarad conversion"
+      },
+      {
+        "key": "D",
+        "latex": "$9.0\\,\\text{J}$",
+        "is_correct": false,
+        "distractor_trap": "Omitted factor of 1/2 in energy formula"
+      }
+    ],
+    "options": [
+      {
+        "key": "A",
+        "latex": "$4.5\\,\\text{J}$",
+        "is_correct": true,
+        "distractor_trap": null
+      },
+      {
+        "key": "B",
+        "latex": "$0.45\\,\\text{J}$",
+        "is_correct": false,
+        "distractor_trap": "Power-of-10 or unit conversion arithmetic slip"
+      },
+      {
+        "key": "C",
+        "latex": "$45\\,\\text{J}$",
+        "is_correct": false,
+        "distractor_trap": "Omitted factor of 10 in microfarad conversion"
+      },
+      {
+        "key": "D",
+        "latex": "$9.0\\,\\text{J}$",
+        "is_correct": false,
+        "distractor_trap": "Omitted factor of 1/2 in energy formula"
+      }
+    ],
+    "correct_answer_latex": "$4.5\\,\\text{J}$",
+    "correct_answer": "A",
+    "solution_latex": "Energy released when the trigger button on the camera is pressed: $$E = \\frac{1}{2} C V^2 = \\frac{1}{2} \\times (100 \\times 10^{-6}\\,\\text{F}) \\times (300\\,\\text{V})^2 = 4.5\\,\\text{J}$$.",
     "socratic_hints": [
       "Recall the fundamental governing principles of Electric Charges and Fields.",
       "Carefully check the units and dimensional consistency before substituting numerical values.",
