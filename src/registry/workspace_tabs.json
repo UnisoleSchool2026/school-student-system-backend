@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Workspace Tab Registry. A tab is shown when the active mode is listed in `modes` AND the tenant's feature flag for that mode is true (or `featureFlag` is null). `target.type = core` points at an existing frontend tab container; `target.type = module` opens the Module Workspace and loads GET /api/modules/:moduleId. Order here is the order in the teacher workspace list. Mode design (2026-11-16): BOARD = NCERT (+ exemplar & exercise), chapter-wise PYQ (Question Bank), Scan Paper Sheets; COMPETITIVE = Roadmap, NCERT, chapter-wise PYQ (Question Bank), chapter-wise DPP, Cheat Sheet.",
   "teacher": [
     {
@@ -77,6 +77,58 @@
           "title": "Question Bank & PYQs",
           "subtitle": "Chapter-wise JEE / NEET practice",
           "badge": "PYQ Bank"
+        }
+      }
+    },
+    {
+      "id": "classDesk",
+      "target": {
+        "type": "core",
+        "tabId": "tabTeacherClassDesk"
+      },
+      "modes": [
+        "BOARD",
+        "COMPETITIVE"
+      ],
+      "featureFlag": "classDesk",
+      "icon": "messages-square",
+      "tone": "green",
+      "labels": {
+        "BOARD": {
+          "title": "Class Desk",
+          "subtitle": "Doubts, notices, homework & reports",
+          "badge": "Desk"
+        },
+        "COMPETITIVE": {
+          "title": "Class Desk",
+          "subtitle": "Doubts, notices, homework & reports",
+          "badge": "Desk"
+        }
+      }
+    },
+    {
+      "id": "studyBoard",
+      "target": {
+        "type": "core",
+        "tabId": "tabTeacherStudyBoard"
+      },
+      "modes": [
+        "BOARD",
+        "COMPETITIVE"
+      ],
+      "featureFlag": "studyBoard",
+      "icon": "presentation",
+      "tone": "blue",
+      "labels": {
+        "BOARD": {
+          "title": "Study Board",
+          "subtitle": "Teach a topic on the class board",
+          "badge": "Board"
+        },
+        "COMPETITIVE": {
+          "title": "Study Board",
+          "subtitle": "Teach a topic on the class board",
+          "badge": "Board"
         }
       }
     },

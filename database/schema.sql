@@ -309,3 +309,18 @@ CREATE TABLE dpp_attempts (
 );
 
 CREATE INDEX idx_dpp_attempts_streak ON dpp_attempts (school_id, student_id, track, dpp_date);
+
+-- ==============================================================================
+-- APPLICATION DOCUMENT STORE (added 2026-11-17)
+-- Used by src/services/persistence.js. The server also creates this table by
+-- itself on start, so running this block by hand is optional.
+-- One row per record: collection = store name (assessments, submissions,
+-- teacherDpps, doubts, notices, mistakeStates, studyProgress, ...), id = record id.
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS school_records (
+    collection  TEXT        NOT NULL,
+    id          TEXT        NOT NULL,
+    data        JSONB       NOT NULL,
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (collection, id)
+);

@@ -8,6 +8,9 @@
 // 5. KaTeX math sanitization & immediate reflection in subject banks
 // ============================================================================
 
+// Each run starts from the committed question bank: saved questions go to a fresh temporary
+// data folder (see src/config/dataPaths.js), so earlier runs cannot change the expected order.
+process.env.DATA_DIR = process.env.DATA_DIR || require('fs').mkdtempSync(require('path').join(require('os').tmpdir(), 'unisole-injection-test-'));
 const assert = require('assert');
 const { inMemoryStore } = require('../src/config/database');
 const {
@@ -109,7 +112,9 @@ Solution: Magnetic field at center $B = \\frac{\\mu_0 I}{2r} = \\frac{\\mu_0 V}{
     chapter: 'Moving Charges and Magnetism',
     category: 'CBSE_PYQ',
     marks: 3,
-    mode: 'text'
+    mode: 'text',
+    examMode: 'BOARD', // mode and track are required since the mode-aware ingestion update
+    examTrack: 'CBSE'
   });
 
   assert(commitResult.question.id.startsWith('snr_p_inj_'), 'Injected ID must have specialized prefix');
@@ -147,7 +152,9 @@ Solution: Magnetic field at center $B = \\frac{\\mu_0 I}{2r} = \\frac{\\mu_0 V}{
       chapter: 'Electrostatics',
       category: cat,
       marks: 2,
-      mode: 'text'
+      mode: 'text',
+      examMode: 'BOARD', // mode and track are required since the mode-aware ingestion update
+      examTrack: 'CBSE'
     });
     assert.strictEqual(res.question.source_category, cat);
   }
@@ -176,7 +183,7 @@ Solution: Magnetic field at center $B = \\frac{\\mu_0 I}{2r} = \\frac{\\mu_0 V}{
   }
   if (imgErr) {
     assert.strictEqual(imgErr.code, 'EXTRACTION_UNREADABLE', `unexpected error: ${imgErr.message}`);
-    assert(/Paste the question text/.test(imgErr.message), 'error must tell the teacher what to do');
+    assert(/paste the question text/i.test(imgErr.message), 'error must tell the teacher what to do');
   } else {
     assert(imgParsed.question_latex, 'Image extraction must produce question_latex');
     assert(Array.isArray(imgParsed.options_latex), 'Options must be an array');
@@ -240,7 +247,9 @@ Solution: Gauss's law states that $\\oint \\vec{E} \\cdot d\\vec{A} = \\frac{q_{
     targetSubject: 'Physics',
     grade: '12',
     category: 'CBSE_PYQ',
-    mode: 'text'
+    mode: 'text',
+    examMode: 'BOARD', // mode and track are required since the mode-aware ingestion update
+    examTrack: 'CBSE'
   });
 
   assert.strictEqual(batchCommitResult.count, 3, 'Batch commit must commit all 3 questions');

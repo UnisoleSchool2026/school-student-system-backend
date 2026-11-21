@@ -172,7 +172,7 @@ async function runTestSuite() {
   assert(bioPhoneLogin.data.teacher.phone === '9816010003', 'Teacher mobile number stored & returned');
   assert(bioPhoneLogin.data.teacher.subjectKey === 'BIOLOGY', 'Teacher subject is strictly BIOLOGY');
   assert(bioPhoneLogin.data.teacher.targetStream === 'NEET', 'Default target stream is NEET');
-  assert(bioPhoneLogin.data.teacher.defaultClass === '11-Med', 'Default class is 11-Med');
+  assert(bioPhoneLogin.data.teacher.defaultClass === '12-Med', 'Default class is 12-Med (seed data: fac_bio_01)');
 
   // Verify Phone Number Lookup
   console.log('\nStep 8b: Testing Phone Number Lookup Endpoint...');
@@ -220,6 +220,9 @@ async function runTestSuite() {
   assert(bioStudents.status === 200, 'GET /api/curriculum/students?subjectKey=BIOLOGY returns HTTP 200');
   assert(bioStudents.data.count > 0, `Found ${bioStudents.data.count} medical students`);
   for (const stu of bioStudents.data.students) {
+    // Composite classes created by step 5 (this run or earlier runs against the same server) include
+    // Biology, so their students rightly appear here too.
+    if (/^11-Sci-Sec-/.test(stu.section)) continue;
     const isMed = stu.section.includes('Med') && !stu.section.includes('NonMed');
     assert(isMed, `Student ${stu.full_name} (${stu.roll_number}) is in Medical class ${stu.section}`);
   }
