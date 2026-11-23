@@ -19,6 +19,7 @@ const { ensureQuestionHasRichOptions } = require('../services/questionOptionEngi
 const { quizTool, testTool, assignmentTool } = require('../services/pipelineTools');
 const { resolvePatternForAssessment, getNegativePenalty } = require('../services/examPatternRegistry');
 const subjectScope = require('../services/subjectScope');
+const schedule = require('../services/scheduleService');
 const {
   BOARD_BLUEPRINTS,
   generateBoardQuestionPaper,
@@ -33,7 +34,7 @@ const {
 router.get('/', (req, res) => {
   try {
     let list = inMemoryStore.assessments || [];
-    const { subject, subjectKey, teacherSubjectKey, section, classId, status } = req.query;
+    const { subject, subjectKey, teacherSubjectKey, section, classId, status, studentId } = req.query;
     const sKey = (teacherSubjectKey || subjectKey || subject || '').toUpperCase().trim();
     if (sKey) {
       // Subject isolation: subject AND class/grade must belong to this teacher's scope
@@ -57,9 +58,25 @@ router.get('/', (req, res) => {
       });
     }
 
+    // Students only see a scheduled test while it is open (and not after they submitted it).
+    const sid = String(studentId || '').trim();
+    const forStudent = sid || String(req.query.availableOnly || '') === '1';
+    if (forStudent) {
+      list = list.filter(a => {
+        if (!a.schedule) return true;
+        if (sid && schedule.hasSubmitted('TEST', a.id, sid)) return false;
+        if (sid && schedule.hasStarted('TEST', a.id, sid)) {
+          const st = schedule.findStart('TEST', a.id, sid);
+          return Date.now() <= schedule.deadlineFor(a.schedule, Date.parse(st.startedAt)) + schedule.GRACE_MS;
+        }
+        return schedule.stateOf(a.schedule) === 'OPEN';
+      });
+    }
+
     res.json({
       success: true,
       count: list.length,
+      serverNow: new Date().toISOString(),
       assessments: list.map(a => ({
         id: a.id,
         code: a.code || `Test ${a.id.slice(-2)}`,
@@ -78,6 +95,7 @@ router.get('/', (req, res) => {
         totalMarks: a.totalMarks,
         questionCount: a.questions ? a.questions.length : (a.totalQuestions || 0),
         status: a.status || 'PUBLISHED',
+        schedule: schedule.view(a.schedule, sid ? schedule.findStart('TEST', a.id, sid) : null),
         createdAt: a.createdAt
       }))
     });
@@ -95,10 +113,28 @@ router.get('/:id', (req, res) => {
     if (!assessment) {
       return res.status(404).json({ success: false, error: 'Assessment not found' });
     }
+    const sid = String(req.query.studentId || '').trim();
+    if (sid && assessment.schedule && !schedule.hasStarted('TEST', id, sid)) {
+      return res.status(403).json({ success: false, error: 'Press Start to open this test.', schedule: schedule.view(assessment.schedule, schedule.findStart('TEST', id, sid)) });
+    }
 
-    res.json({ success: true, assessment });
+    res.json({ success: true, assessment: sid ? Object.assign({}, assessment, { schedule: schedule.view(assessment.schedule, schedule.findStart('TEST', id, sid)) }) : assessment });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/assessments/:id/start { studentId } - student presses Start on a scheduled test.
+// Returns the test with its questions and the student's deadline (the clock runs on the server).
+router.post('/:id/start', (req, res) => {
+  try {
+    const assessment = (inMemoryStore.assessments || []).find(a => a.id === req.params.id);
+    if (!assessment || (assessment.status || 'PUBLISHED') === 'DRAFT') return res.status(404).json({ success: false, error: 'Test not found.' });
+    const studentId = String((req.body || {}).studentId || '').trim();
+    const v = schedule.start('TEST', assessment.id, assessment.schedule, studentId);
+    res.json({ success: true, assessment: Object.assign({}, assessment, { schedule: v }) });
+  } catch (err) {
+    res.status(err.status || 500).json({ success: false, error: err.message });
   }
 });
 
@@ -117,6 +153,8 @@ router.post('/', async (req, res) => {
       totalMarks = 20,
       questions = []
     } = req.body;
+    let sched = null;
+    try { sched = schedule.normalize(req.body.schedule, { defaultDuration: Number(durationMinutes) || 30 }); } catch (e) { return res.status(e.status || 400).json({ success: false, error: e.message }); }
 
     if (!title || !Array.isArray(questions) || questions.length === 0) {
       return res.status(400).json({
@@ -134,8 +172,14 @@ router.post('/', async (req, res) => {
       section,
       board,
       subject,
-      durationMinutes: Number(durationMinutes) || 30,
+      durationMinutes: sched && sched.mode === 'DURATION' ? sched.durationMinutes : (Number(durationMinutes) || 30),
       totalMarks: Number(totalMarks) || (questions.length * 4),
+      schedule: sched,
+      // A test built from questions picked in the Question Bank starts as a draft, so the teacher
+      // can review it and choose when students take it before publishing.
+      status: String(req.body.status || '').toUpperCase() === 'DRAFT' ? 'DRAFT' : 'PUBLISHED',
+      teacherSubjectKey: req.body.teacherSubjectKey ? String(req.body.teacherSubjectKey).toUpperCase() : undefined,
+      targetClass: section,
       questions: questions.map((rawQ, idx) => {
         const q = ensureQuestionHasRichOptions({ ...rawQ });
         return {
@@ -153,7 +197,11 @@ router.post('/', async (req, res) => {
           solution_latex: q.solution_latex || '',
           socratic_hints: q.socratic_hints || [],
           ncert_mapping: q.ncert_mapping || null,
-          step_rubric: q.step_rubric || []
+          step_rubric: q.step_rubric || [],
+          marks: Number(q.marks || q.marks_weightage) || undefined,
+          chapter_name: q.chapter_name || q.chapter || undefined,
+          question_format: q.question_format || undefined,
+          source_question_id: rawQ.id || undefined
         };
       }),
       createdAt: new Date().toISOString()
@@ -163,7 +211,7 @@ router.post('/', async (req, res) => {
     inMemoryStore.assessments.unshift(newAssessment);
 
     // Emit event to Kafka stream
-    await emitEvent('assessment.published', newAssessment.id, {
+    if (newAssessment.status !== 'DRAFT') await emitEvent('assessment.published', newAssessment.id, {
       title: newAssessment.title,
       grade: newAssessment.grade,
       teacher: newAssessment.teacherName,
@@ -172,7 +220,7 @@ router.post('/', async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Assessment published successfully to class roster.',
+      message: newAssessment.status === 'DRAFT' ? 'Draft test created.' : 'Assessment published successfully to class roster.',
       assessment: newAssessment
     });
   } catch (err) {
@@ -194,6 +242,8 @@ router.post('/:id/submit', async (req, res) => {
     if (!assessment) {
       return res.status(404).json({ success: false, error: 'Assessment not found' });
     }
+    try { schedule.checkSubmit('TEST', id, assessment.schedule, studentId); } catch (e) { return res.status(e.status || 403).json({ success: false, error: e.message }); }
+    if (assessment.schedule) schedule.markSubmitted('TEST', id, studentId);
 
     let rawScore = 0;
     const examBoard = String(assessment.board || assessment.curriculum_board || '').toUpperCase();
@@ -952,6 +1002,15 @@ router.post('/:id/publish', async (req, res) => {
       return res.status(404).json({ success: false, error: `Assessment "${id}" not found.` });
     }
 
+    try {
+      assessment.schedule = schedule.normalize((req.body || {}).schedule, { defaultDuration: Number(assessment.durationMinutes) || 60 });
+    } catch (e) {
+      return res.status(e.status || 400).json({ success: false, error: e.message });
+    }
+    if (assessment.schedule && assessment.schedule.mode === 'DURATION') {
+      assessment.durationMinutes = assessment.schedule.durationMinutes;
+      assessment.duration = `${assessment.schedule.durationMinutes} Mins`;
+    }
     assessment.status = 'PUBLISHED';
     assessment.publishedAt = new Date().toISOString();
 
@@ -967,7 +1026,9 @@ router.post('/:id/publish', async (req, res) => {
 
     res.json({
       success: true,
-      message: `Test "${assessment.title}" is now published to ${assessment.section || assessment.targetClass}!`,
+      message: assessment.schedule
+        ? `Test "${assessment.title}" is scheduled for ${assessment.section || assessment.targetClass}: open ${schedule.when(assessment.schedule.opensAt)} to ${schedule.when(assessment.schedule.closesAt)}.`
+        : `Test "${assessment.title}" is now published to ${assessment.section || assessment.targetClass}!`,
       assessment
     });
   } catch (err) {

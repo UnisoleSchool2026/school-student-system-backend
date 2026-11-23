@@ -19,6 +19,7 @@ const crypto = require('crypto');
 const { inMemoryStore } = require('../config/database');
 const content = require('./canonicalContentService');
 const subjectScope = require('./subjectScope');
+const schedule = require('./scheduleService');
 
 const dataPaths = require('../config/dataPaths');
 // Saved to backend/data/teacher_dpps.json (older versions wrote src/database/teacher_dpps.json; it is still read once if present).
@@ -159,6 +160,7 @@ function create(body = {}) {
     throw fail(400, 'source must be BANK or CUSTOM.');
   }
 
+  const sched = schedule.normalize(body.schedule, { defaultDuration: Number(body.timeLimitMinutes) || 20 });
   const now = new Date().toISOString();
   const dpp = {
     id: `tdpp_${Date.now().toString(36)}_${crypto.randomBytes(3).toString('hex')}`,
@@ -174,7 +176,8 @@ function create(body = {}) {
     source,
     teacherId: teacher.id || null,
     teacherName: teacher.name || teacher.full_name || '',
-    timeLimitMinutes: Math.max(5, Math.min(180, Number(body.timeLimitMinutes) || 20)),
+    timeLimitMinutes: sched && sched.mode === 'DURATION' ? sched.durationMinutes : Math.max(5, Math.min(180, Number(body.timeLimitMinutes) || 20)),
+    schedule: sched,
     dueDate: /^\d{4}-\d{2}-\d{2}$/.test(String(body.dueDate || '')) ? body.dueDate : null,
     marking: { correct: Number(body.correctMarks) || 4, incorrect: body.incorrectMarks === undefined ? -1 : Number(body.incorrectMarks) },
     questions,
@@ -242,7 +245,7 @@ function summary(dpp) {
   return {
     id: dpp.id, title: dpp.title, subject: dpp.subject, subjectKey: dpp.subjectKey, section: dpp.section, grade: dpp.grade,
     chapterName: dpp.chapterName, source: dpp.source, questionCount: dpp.questions.length, timeLimitMinutes: dpp.timeLimitMinutes,
-    dueDate: dpp.dueDate, createdAt: dpp.createdAt, teacherName: dpp.teacherName,
+    dueDate: dpp.dueDate, createdAt: dpp.createdAt, teacherName: dpp.teacherName, schedule: dpp.schedule || null,
     submitted: r.submitted, enrolled: r.enrolled, avgPercent: r.avgPercent
   };
 }
@@ -269,6 +272,7 @@ function remove(id, teacherSubjectKey) {
   if (!teacherSubjectKey || !inTeacherScope(teacherSubjectKey, dpp)) throw fail(403, 'This DPP belongs to another subject or class.');
   s.teacherDpps = s.teacherDpps.filter(d => d.id !== id);
   s.teacherDppAttempts = s.teacherDppAttempts.filter(a => a.dppId !== id);
+  schedule.forgetItem('DPP', id);
   save();
   return { removed: id };
 }
@@ -283,11 +287,19 @@ function listForStudent(studentId) {
   if (!student) throw fail(404, 'Student not found.');
   return store().teacherDpps
     .filter(d => sectionEq(d.section, student.section))
+    .filter(d => {
+      if (!d.schedule) return true;
+      if (store().teacherDppAttempts.some(x => x.dppId === d.id && x.studentId === student.id)) return true;
+      const st = schedule.findStart('DPP', d.id, student.id);
+      if (st && !st.submittedAt) return Date.now() <= schedule.deadlineFor(d.schedule, Date.parse(st.startedAt)) + schedule.GRACE_MS;
+      return schedule.stateOf(d.schedule) === 'OPEN';
+    })
     .map(d => {
       const a = store().teacherDppAttempts.filter(x => x.dppId === d.id && x.studentId === student.id).pop();
       return {
         id: d.id, title: d.title, subject: d.subject, chapterName: d.chapterName, questionCount: d.questions.length,
         timeLimitMinutes: d.timeLimitMinutes, dueDate: d.dueDate, createdAt: d.createdAt, teacherName: d.teacherName,
+        schedule: schedule.view(d.schedule, schedule.findStart('DPP', d.id, student.id)),
         status: a ? 'SUBMITTED' : 'PENDING', score: a ? a.score : null, maxScore: d.questions.length * d.marking.correct, percent: a ? a.percent : null
       };
     });
@@ -299,9 +311,14 @@ function studentDetail(id, studentId) {
   if (!dpp) throw fail(404, 'DPP not found.');
   if (!student || !sectionEq(student.section, dpp.section)) throw fail(403, 'This DPP is not assigned to your class.');
   const attempt = store().teacherDppAttempts.filter(a => a.dppId === id && a.studentId === studentId).pop() || null;
+  const sv = schedule.view(dpp.schedule, schedule.findStart('DPP', id, studentId));
+  if (dpp.schedule && !attempt && !schedule.hasStarted('DPP', id, studentId)) {
+    // Not started yet: the student sees the timing and a Start button, not the questions.
+    return { id: dpp.id, title: dpp.title, subject: dpp.subject, chapterName: dpp.chapterName, timeLimitMinutes: dpp.timeLimitMinutes, marking: dpp.marking, dueDate: dpp.dueDate, questionCount: dpp.questions.length, schedule: sv, needsStart: true, questions: [], attempt: null };
+  }
   return {
     id: dpp.id, title: dpp.title, subject: dpp.subject, chapterName: dpp.chapterName, timeLimitMinutes: dpp.timeLimitMinutes,
-    marking: dpp.marking, dueDate: dpp.dueDate,
+    marking: dpp.marking, dueDate: dpp.dueDate, schedule: sv,
     // Answers and solutions only after the student has submitted.
     questions: dpp.questions.map((q, i) => Object.assign(
       { index: i + 1, id: q.id, questionLatex: q.questionLatex, options: q.options, difficulty: q.difficulty, chapterName: q.chapterName },
@@ -317,6 +334,7 @@ function submit(id, { studentId, answers = {}, timeTakenSeconds } = {}) {
   if (!dpp) throw fail(404, 'DPP not found.');
   if (!student || !sectionEq(student.section, dpp.section)) throw fail(403, 'This DPP is not assigned to your class.');
   if (store().teacherDppAttempts.some(a => a.dppId === id && a.studentId === studentId)) throw fail(409, 'You have already submitted this DPP.');
+  schedule.checkSubmit('DPP', id, dpp.schedule, studentId);
   const clean = {};
   let score = 0; let correctCount = 0; let wrongCount = 0;
   dpp.questions.forEach(q => {
@@ -343,10 +361,22 @@ function submit(id, { studentId, answers = {}, timeTakenSeconds } = {}) {
     submittedAt: new Date().toISOString()
   };
   store().teacherDppAttempts.push(attempt);
+  if (dpp.schedule) schedule.markSubmitted('DPP', id, studentId);
   save();
+  return studentDetail(id, studentId);
+}
+
+// Student presses Start on a scheduled DPP: the clock starts on the server.
+function startAttempt(id, studentId) {
+  const student = studentById(studentId);
+  const dpp = store().teacherDpps.find(d => d.id === id);
+  if (!dpp) throw fail(404, 'DPP not found.');
+  if (!student || !sectionEq(student.section, dpp.section)) throw fail(403, 'This DPP is not assigned to your class.');
+  if (store().teacherDppAttempts.some(a => a.dppId === id && a.studentId === studentId)) return studentDetail(id, studentId);
+  schedule.start('DPP', id, dpp.schedule, studentId);
   return studentDetail(id, studentId);
 }
 
 load();
 
-module.exports = { create, listForTeacher, teacherDetail, remove, listForStudent, studentDetail, submit, STORE_FILE: dataPaths.runtimePath(STORE_NAME) };
+module.exports = { create, listForTeacher, teacherDetail, remove, listForStudent, studentDetail, submit, startAttempt, STORE_FILE: dataPaths.runtimePath(STORE_NAME) };

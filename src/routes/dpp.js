@@ -34,6 +34,8 @@ router.get('/:id', (req, res) => handle(res, () => {
   return { dpp: dpp.teacherDetail(req.params.id, String(req.query.teacherSubjectKey || '').toUpperCase()) };
 }));
 
+router.post('/:id/start', (req, res) => handle(res, () => ({ dpp: dpp.startAttempt(req.params.id, String((req.body || {}).studentId || '')) })));
+
 router.post('/:id/submit', (req, res) => handle(res, () => ({ dpp: dpp.submit(req.params.id, req.body || {}) })));
 
 router.delete('/:id', (req, res) => handle(res, () => dpp.remove(req.params.id, String(req.query.teacherSubjectKey || '').toUpperCase())));

@@ -20,7 +20,9 @@
     "test:ingestion": "node scripts/test_phase1_ingestion_auth.js && node scripts/test_phase2_canonical_schema.js && node scripts/run_extraction_benchmarks.js",
     "benchmarks:update-docs": "node scripts/run_extraction_benchmarks.js --update-docs",
     "test:ncert-library": "node scripts/test_ncert_library.js",
-    "test:voice": "node scripts/test_voice_tutor_and_diagrams.js"
+    "test:voice": "node scripts/test_voice_tutor_and_diagrams.js",
+    "test:schedule": "node scripts/test_schedule.js",
+    "test:question-bank": "node scripts/test_question_bank.js"
   },
   "dependencies": {
     "@google/genai": "^2.32.0",
