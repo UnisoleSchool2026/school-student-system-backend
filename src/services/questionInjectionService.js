@@ -1249,7 +1249,8 @@ function loadPersistedCustomQuestions() {
       if (fs.existsSync(p)) {
         const raw = fs.readFileSync(p, 'utf8');
         const list = JSON.parse(raw);
-        if (Array.isArray(list) && list.length > 0) {
+        // The runtime copy is the truth once it exists, even when empty (questions may have been deleted).
+        if (Array.isArray(list) && (list.length > 0 || p === paths[0])) {
           return list.map(q => sanitizeQuestionPayload(q));
         }
       }
@@ -1296,6 +1297,22 @@ function savePersistedCustomQuestions(newQuestions = []) {
   }
 
   return saved;
+}
+
+// Replaces the whole saved list (used by the Question Bank to edit or delete a teacher's question).
+function rewritePersistedCustomQuestions(transform) {
+  const next = transform(loadPersistedCustomQuestions()).map(q => sanitizeQuestionPayload(q));
+  inMemoryStore.injectedQuestions = next.slice();
+  for (const p of getCustomQuestionsWritePaths()) {
+    try {
+      fs.mkdirSync(path.dirname(p), { recursive: true });
+      const tmp = p + '.' + process.pid + '.tmp';
+      fs.writeFileSync(tmp, JSON.stringify(next, null, 2), 'utf8');
+      fs.renameSync(tmp, p);
+      return true;
+    } catch (e) { /* try the next path */ }
+  }
+  return false;
 }
 
 /**
@@ -1352,5 +1369,6 @@ module.exports = {
   getCustomQuestionsStoragePaths,
   loadPersistedCustomQuestions,
   savePersistedCustomQuestions,
+  rewritePersistedCustomQuestions,
   parseRawTextLocally
 };

@@ -37,6 +37,7 @@ const noticesRouter = require('./routes/notices');
 const mistakesRouter = require('./routes/mistakes');
 const tutorRouter = require('./routes/tutor');
 const ncertLibraryRouter = require('./routes/ncertLibrary');
+const questionBankRouter = require('./routes/questionBank');
 
 const app = express();
 app.disable('x-powered-by');
@@ -164,6 +165,7 @@ app.use('/api/notices', noticesRouter);
 app.use('/api/mistakes', mistakesRouter);
 app.use('/api/tutor', tutorRouter);
 app.use('/api/ncert-library', ncertLibraryRouter);
+app.use('/api/question-bank', questionBankRouter);
 
 // Standalone Backend API Gateway Root
 app.get('/', (req, res) => {
