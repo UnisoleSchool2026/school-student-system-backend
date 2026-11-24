@@ -185,4 +185,94 @@ function resolve(reportId, body) {
   return r;
 }
 
-module.exports = { update, remove, savedIds, setSaved, report, reports, resolve, REASONS, subjectOf };
+// ------------------------------------------------------------------ AI help (2026-11-24) --
+// A question's solution is "thin" when it is missing, very short or a placeholder line.
+function solutionIsThin(q) {
+  const s = String((q && q.solution_latex) || '').replace(/\s+/g, ' ').trim();
+  if (s.length < 90) return true;
+  return /solution attached|detailed step-by-step solution|see solution|refer (to )?ncert/i.test(s) && s.length < 200;
+}
+function stepsToLatex(steps, answer) {
+  return steps.map((st, i) => `Step ${i + 1}: ${st.title}\n${st.text}`).join('\n\n') + (answer ? `\n\nAnswer: ${answer}` : '');
+}
+function applySolution(id, sol) {
+  copies(id).forEach(c => {
+    const q = c.list[c.i];
+    q.solution_latex = stepsToLatex(sol.steps, sol.final_answer);
+    q.solution_steps = sol.steps;
+    q.solution_ai = true;
+  });
+}
+let solutionsApplied = false;
+// Puts saved AI solutions back on the built-in questions after a restart (they are not in the bank files).
+function applySavedSolutions() {
+  if (solutionsApplied) return;
+  solutionsApplied = true;
+  const sols = meta().solutions || {};
+  Object.keys(sols).forEach(id => applySolution(id, sols[id]));
+}
+async function detailedSolution(id, body) {
+  const t = teacherOf(body);
+  const q = find(id);
+  if (!q) throw fail(404, 'Question not found.');
+  const m = meta();
+  m.solutions = m.solutions || {};
+  if (m.solutions[id] && !body.force) return { solution: m.solutions[id], question: find(id), cached: true };
+  if (!body.force && !solutionIsThin(q)) return { solution: null, question: q, cached: true };
+  const opts = Array.isArray(q.options_latex) ? q.options_latex.map(o => `${o.key}) ${o.latex}`).join('\n') : '';
+  const correct = (Array.isArray(q.options_latex) && (q.options_latex.find(o => o.is_correct) || {}).key) || q.correct_answer || q.correct_answer_latex || '';
+  const gemini = require('./geminiClient');
+  const out = ((await gemini.generateJson({
+    temperature: 0.2,
+    systemInstruction: 'You are an experienced Indian school teacher (CBSE / JEE / NEET). Write clear, correct, student-friendly worked solutions. Use LaTeX between $ signs for maths. Return JSON only.',
+    parts: [{ text: `QB_DETAILED_SOLUTION\nWrite a detailed step-by-step solution for this ${q.subject || 'Physics'} question (Class ${q.grade || 12}, chapter: ${q.chapter_name || q.chapter || ''}).\nQuestion: ${q.question_latex}\n${opts ? 'Options:\n' + opts + '\n' : ''}${correct ? 'The correct answer is: ' + correct + '\n' : ''}${q.solution_latex ? 'Short solution already given: ' + q.solution_latex + '\n' : ''}Give 3 to 7 steps. Each step: a short title and the working (what law or formula, why, then the numbers with units). Do not change the correct answer.\nReturn JSON: {"steps":[{"title":"...","text":"..."}],"final_answer":"...","concept":"one line on the idea used"}` }]
+  })) || {}).data || {};
+  const steps = (Array.isArray(out && out.steps) ? out.steps : []).map(st => ({ title: clean(st.title, 120), text: clean(st.text, 2000) })).filter(st => st.text).slice(0, 10);
+  if (!steps.length) throw fail(422, 'The AI did not return a solution. Please try again.');
+  const sol = { steps, final_answer: clean(out.final_answer, 400), concept: clean(out.concept, 300), at: new Date().toISOString(), by: t.id };
+  m.solutions[id] = sol;
+  applySolution(id, sol);
+  saveMeta();
+  if (q.injected_by) injection.rewritePersistedCustomQuestions(list => list.map(x => (x.id === id ? Object.assign({}, x, { solution_latex: stepsToLatex(steps, sol.final_answer), solution_steps: steps, solution_ai: true }) : x)));
+  return { solution: sol, question: find(id), cached: false };
+}
+
+// Drafts new questions for a chapter (for chapters with few questions). Nothing is saved here:
+// the teacher reviews the drafts and saves the ones they keep through the normal add-question import.
+async function generateDrafts(body) {
+  const t = teacherOf(body);
+  const count = Math.max(1, Math.min(10, Number(body.count) || 5));
+  const chapter = clean(body.chapter, 160);
+  if (!chapter) throw fail(400, 'Choose a chapter first.');
+  const grade = clean(body.grade || '12', 4);
+  const mode = String(body.mode || 'BOARD').toUpperCase() === 'COMPETITIVE' ? 'COMPETITIVE' : 'BOARD';
+  const difficulty = DIFFICULTIES.includes(String(body.difficulty || '').toUpperCase()) ? String(body.difficulty).toUpperCase() : 'MIXED';
+  const kind = ['MIXED', 'NUMERICAL'].includes(String(body.kind || '').toUpperCase()) ? String(body.kind).toUpperCase() : 'MCQ';
+  const gemini = require('./geminiClient');
+  const out = ((await gemini.generateJson({
+    temperature: 0.5,
+    systemInstruction: 'You are an expert Indian question setter. Every question must be correct, unambiguous and match the NCERT syllabus of the class. Use LaTeX between $ signs. Return JSON only.',
+    parts: [{ text: `QB_GENERATE_QUESTIONS COUNT=${count}\nWrite ${count} new ${t.subjectKey.toLowerCase()} questions for Class ${grade}, chapter "${chapter}"${body.topic ? ', topic "' + clean(body.topic, 160) + '"' : ''}.\nStyle: ${mode === 'COMPETITIVE' ? 'JEE/NEET single-correct MCQs, +4/-1' : 'CBSE / HP Board exam style'}. Difficulty: ${difficulty}. ${kind === 'MCQ' ? 'All multiple choice with 4 options.' : kind === 'NUMERICAL' ? 'All numerical-answer questions (the answer is one number; leave options empty and put the number in "answer").' : 'Mix of multiple choice (4 options) and short written questions.'}\nReturn JSON: {"questions":[{"question":"...","options":["...","...","...","..."] (empty for written),"answer":"A|B|C|D or the written answer","solution":"step-by-step working","topic":"...","difficulty":"EASY|MEDIUM|HARD","marks":1}]}` }]
+  })) || {}).data || {};
+  const qs = (Array.isArray(out && out.questions) ? out.questions : []).slice(0, count).map(x => {
+    const options = (Array.isArray(x.options) ? x.options : []).map(o => clean(o, 1500)).filter(Boolean).slice(0, 4);
+    const isMcq = options.length === 4;
+    const key = String(x.answer || '').trim().toUpperCase().replace(/[^A-D]/g, '').slice(0, 1);
+    return {
+      question_latex: clean(x.question, 4000),
+      options_latex: isMcq ? options.map((o, i) => ({ key: 'ABCD'[i], latex: o, is_correct: 'ABCD'[i] === key })) : [],
+      correct_answer: isMcq ? key : null,
+      correct_answer_latex: isMcq ? (options['ABCD'.indexOf(key)] || '') : clean(x.answer, 2000),
+      question_format: isMcq ? 'MCQ_SINGLE' : (kind === 'NUMERICAL' ? 'NUMERICAL' : 'SHORT_ANSWER'),
+      solution_latex: clean(x.solution, 6000),
+      chapter_name: chapter, chapter, topic: clean(x.topic, 160) || clean(body.topic, 160) || chapter,
+      difficulty: DIFFICULTIES.includes(String(x.difficulty || '').toUpperCase()) ? String(x.difficulty).toUpperCase() : 'MEDIUM',
+      marks: Math.max(1, Math.min(20, Number(x.marks) || (isMcq ? 1 : 3))),
+      ai_generated: true
+    };
+  }).filter(x => x.question_latex.length >= 5 && (x.options_latex.length ? x.correct_answer : x.correct_answer_latex));
+  if (!qs.length) throw fail(422, 'The AI did not return usable questions. Please try again.');
+  return { questions: qs };
+}
+
+module.exports = { update, remove, savedIds, setSaved, report, reports, resolve, REASONS, subjectOf, detailedSolution, generateDrafts, applySavedSolutions, solutionIsThin };

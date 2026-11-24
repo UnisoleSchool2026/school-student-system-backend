@@ -22,7 +22,8 @@
     "test:ncert-library": "node scripts/test_ncert_library.js",
     "test:voice": "node scripts/test_voice_tutor_and_diagrams.js",
     "test:schedule": "node scripts/test_schedule.js",
-    "test:question-bank": "node scripts/test_question_bank.js"
+    "test:question-bank": "node scripts/test_question_bank.js",
+    "test:tests-dpps": "node scripts/test_tests_dpps.js"
   },
   "dependencies": {
     "@google/genai": "^2.32.0",

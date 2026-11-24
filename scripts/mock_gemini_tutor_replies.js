@@ -46,6 +46,12 @@ function forPrompt(text) {
   if (/^The image is a figure/.test(text) && /MCQs/.test(text)) return { questions: [{ q: 'What does the figure show?', options: ['Two attracting charges', 'A lens', 'A circuit', 'A wave'], answer: 0, why: 'A +q and a -q joined by a line.' }] };
   if (/^The image is a figure/.test(text) && /The student asks/.test(text)) return { title: 'Your question', simple: ['They attract because the charges are unlike.'], example: '', remember: 'Unlike charges attract.' };
   if (/Make a quiz ONLY from this NCERT text/.test(text)) return { questions: [{ q: 'What is the SI unit of charge?', options: ['Ampere', 'Coulomb', 'Volt', 'Ohm'], answer: 1, why: 'The text says charge is measured in coulomb.' }, { q: 'Two positive charges will', options: ['attract', 'repel', 'not interact', 'merge'], answer: 1, why: 'Like charges repel.' }, { q: 'Charge on a body is always', options: ['any value', 'a multiple of $e$', 'zero', 'negative'], answer: 1, why: 'Charge is quantised: $q = ne$.' }] };
+  // Question Bank (2026-11-24): detailed solutions and AI question drafts
+  if (/QB_DETAILED_SOLUTION/.test(text)) return { steps: [{ title: 'Write what is given', text: 'Force in air $F_{air} = 40\\,N$, force in the medium $F_{med} = 8\\,N$.' }, { title: 'Use the definition', text: 'The dielectric constant is $K = \\dfrac{F_{air}}{F_{med}}$ because the medium reduces the force by the factor $K$.' }, { title: 'Put in the numbers', text: '$K = \\dfrac{40}{8} = 5$' }], final_answer: '$K = 5$', concept: 'Coulomb force in a medium is $F/K$.' };
+  if (/QB_GENERATE_QUESTIONS/.test(text)) {
+    const n = Math.min(10, Number((/COUNT=(\d+)/.exec(text) || [])[1]) || 3);
+    return { questions: Array.from({ length: n }, (_, i) => ({ question: `Draft question ${i + 1}: a body moves with $v = ${i + 2}\\,m/s$ for $${i + 3}\\,s$. How far does it go?`, options: [`$${(i + 2) * (i + 3)}\\,m$`, `$${i + 5}\\,m$`, `$${(i + 2) * (i + 3) * 2}\\,m$`, `$${i + 1}\\,m$`], answer: 'A', solution: `Distance $= v t = ${i + 2} \\times ${i + 3} = ${(i + 2) * (i + 3)}\\,m$.`, topic: 'Uniform motion', difficulty: 'EASY', marks: 1 })) };
+  }
   return null;
 }
 
