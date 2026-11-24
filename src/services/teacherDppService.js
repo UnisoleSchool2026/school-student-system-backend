@@ -104,6 +104,20 @@ function fromBankRecord(r) {
 }
 
 function fromCustom(q, i) {
+  const numeric = /NUMERIC|INTEGER/.test(String(q.question_type || q.questionType || q.question_format || '').toUpperCase()) && !((q.options_latex || q.options || []).length);
+  if (numeric) {
+    return {
+      id: `tq_${Date.now().toString(36)}_${i}_${crypto.randomBytes(2).toString('hex')}`,
+      source: 'TEACHER', type: 'NUMERICAL',
+      questionLatex: String(q.question_latex || q.questionLatex || '').trim(),
+      options: [],
+      correctAnswer: String(q.numerical_answer || q.correct_answer_latex || q.correct_answer || '').replace(/\$/g, '').trim(),
+      solutionLatex: String(q.solution_latex || q.solutionLatex || ''),
+      chapterName: q.chapter_name || q.chapterName || '', topic: q.topic || '',
+      difficulty: String(q.difficulty || 'MEDIUM').toUpperCase(),
+      sourceQuestionId: q.source_question_id || null
+    };
+  }
   const options = (q.options_latex || q.options || []).map(o => ({ key: String(o.key || '').toUpperCase(), latex: String(o.latex || o.text || ''), isCorrect: Boolean(o.is_correct || o.isCorrect) }));
   const keyed = options.find(o => o.isCorrect);
   const correct = String(q.correct_answer || q.correctAnswer || (keyed ? keyed.key : '') || '').toUpperCase();
@@ -121,7 +135,19 @@ function fromCustom(q, i) {
 }
 
 function validQuestion(q) {
+  if (q.type === 'NUMERICAL') return Boolean(q.questionLatex && Number.isFinite(numberOf(q.correctAnswer)));
   return q.questionLatex && q.options.length >= 2 && q.options.some(o => o.key === q.correctAnswer);
+}
+// "2.5", "2.5 m/s", "1.2e-3" -> number (null when there is none)
+function numberOf(v) {
+  const m = /-?\d+(?:\.\d+)?(?:e-?\d+)?/i.exec(String(v == null ? '' : v).replace(/,/g, '').replace(/\\times\s*10\^\{?(-?\d+)\}?/, 'e$1'));
+  return m ? Number(m[0]) : null;
+}
+// A numerical answer is right when it is within 1% (or 0.01) of the key.
+function numericMatch(given, key) {
+  const a = numberOf(given), b = numberOf(key);
+  if (a === null || b === null) return false;
+  return Math.abs(a - b) <= Math.max(0.01, Math.abs(b) * 0.01);
 }
 
 // ---------------------------------------------------------------- create --
@@ -154,7 +180,7 @@ function create(body = {}) {
     const raw = Array.isArray(body.questions) ? body.questions : [];
     const all = raw.map(fromCustom);
     questions = all.filter(validQuestion);
-    if (!questions.length) throw fail(400, 'Add at least one multiple-choice question with its correct option.');
+    if (!questions.length) throw fail(400, 'Add at least one multiple-choice question with its correct option, or a numerical question with its answer.');
     if (questions.length > MAX_Q) questions = questions.slice(0, MAX_Q);
   } else {
     throw fail(400, 'source must be BANK or CUSTOM.');
@@ -219,7 +245,7 @@ function resultsFor(dpp) {
   const done = students.filter(s => s.status === 'SUBMITTED');
   const perQuestion = dpp.questions.map((q, i) => {
     const answered = Array.from(latestByStudent.values()).map(a => a.answers[q.id]).filter(Boolean);
-    const correct = answered.filter(k => k === q.correctAnswer).length;
+    const correct = answered.filter(k => (q.type === 'NUMERICAL' ? numericMatch(k, q.correctAnswer) : k === q.correctAnswer)).length;
     return {
       index: i + 1,
       questionId: q.id,
@@ -287,6 +313,7 @@ function listForStudent(studentId) {
   if (!student) throw fail(404, 'Student not found.');
   return store().teacherDpps
     .filter(d => sectionEq(d.section, student.section))
+    .filter(d => d.status !== 'WITHDRAWN' && (!d.assignedStudentIds || !d.assignedStudentIds.length || d.assignedStudentIds.includes(student.id)))
     .filter(d => {
       if (!d.schedule) return true;
       if (store().teacherDppAttempts.some(x => x.dppId === d.id && x.studentId === student.id)) return true;
@@ -310,6 +337,7 @@ function studentDetail(id, studentId) {
   const dpp = store().teacherDpps.find(d => d.id === id);
   if (!dpp) throw fail(404, 'DPP not found.');
   if (!student || !sectionEq(student.section, dpp.section)) throw fail(403, 'This DPP is not assigned to your class.');
+  if (dpp.status === 'WITHDRAWN' || (dpp.assignedStudentIds && dpp.assignedStudentIds.length && !dpp.assignedStudentIds.includes(studentId))) throw fail(403, 'This DPP is not open for you.');
   const attempt = store().teacherDppAttempts.filter(a => a.dppId === id && a.studentId === studentId).pop() || null;
   const sv = schedule.view(dpp.schedule, schedule.findStart('DPP', id, studentId));
   if (dpp.schedule && !attempt && !schedule.hasStarted('DPP', id, studentId)) {
@@ -322,7 +350,8 @@ function studentDetail(id, studentId) {
     // Answers and solutions only after the student has submitted.
     questions: dpp.questions.map((q, i) => Object.assign(
       { index: i + 1, id: q.id, questionLatex: q.questionLatex, options: q.options, difficulty: q.difficulty, chapterName: q.chapterName },
-      attempt ? { correctAnswer: q.correctAnswer, solutionLatex: q.solutionLatex, selected: attempt.answers[q.id] || null } : {}
+      { type: q.type || 'MCQ' },
+      attempt ? { correctAnswer: q.correctAnswer, solutionLatex: q.solutionLatex, selected: attempt.answers[q.id] || null, isCorrect: q.type === 'NUMERICAL' ? numericMatch(attempt.answers[q.id], q.correctAnswer) : attempt.answers[q.id] === q.correctAnswer } : {}
     )),
     attempt: attempt ? { score: attempt.score, maxScore: attempt.maxScore, percent: attempt.percent, correct: attempt.correctCount, wrong: attempt.wrongCount, skipped: attempt.unattempted, submittedAt: attempt.submittedAt } : null
   };
@@ -333,15 +362,17 @@ function submit(id, { studentId, answers = {}, timeTakenSeconds } = {}) {
   const dpp = store().teacherDpps.find(d => d.id === id);
   if (!dpp) throw fail(404, 'DPP not found.');
   if (!student || !sectionEq(student.section, dpp.section)) throw fail(403, 'This DPP is not assigned to your class.');
+  if (dpp.status === 'WITHDRAWN' || (dpp.assignedStudentIds && dpp.assignedStudentIds.length && !dpp.assignedStudentIds.includes(studentId))) throw fail(403, 'This DPP is not open for you.');
   if (store().teacherDppAttempts.some(a => a.dppId === id && a.studentId === studentId)) throw fail(409, 'You have already submitted this DPP.');
   schedule.checkSubmit('DPP', id, dpp.schedule, studentId);
   const clean = {};
   let score = 0; let correctCount = 0; let wrongCount = 0;
   dpp.questions.forEach(q => {
-    const sel = answers[q.id] ? String(answers[q.id]).trim().toUpperCase() : null;
-    if (!sel) return;
+    const raw = answers[q.id] ? String(answers[q.id]).trim().slice(0, 40) : null;
+    if (!raw) return;
+    const sel = q.type === 'NUMERICAL' ? raw : raw.toUpperCase();
     clean[q.id] = sel;
-    if (sel === q.correctAnswer) { score += dpp.marking.correct; correctCount += 1; } else { score += dpp.marking.incorrect; wrongCount += 1; }
+    if (q.type === 'NUMERICAL' ? numericMatch(sel, q.correctAnswer) : sel === q.correctAnswer) { score += dpp.marking.correct; correctCount += 1; } else { score += dpp.marking.incorrect; wrongCount += 1; }
   });
   const maxScore = dpp.questions.length * dpp.marking.correct;
   const attempt = {
@@ -379,4 +410,4 @@ function startAttempt(id, studentId) {
 
 load();
 
-module.exports = { create, listForTeacher, teacherDetail, remove, listForStudent, studentDetail, submit, startAttempt, STORE_FILE: dataPaths.runtimePath(STORE_NAME) };
+module.exports = { _save: () => save(), _store: () => store(), create, listForTeacher, teacherDetail, remove, listForStudent, studentDetail, submit, startAttempt, STORE_FILE: dataPaths.runtimePath(STORE_NAME) };

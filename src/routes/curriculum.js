@@ -733,6 +733,33 @@ router.get('/students', (req, res) => {
   }
 });
 
+// Manage classes & students (2026-11-24): move a student to another class, or take them out of a class.
+// The record is kept (marks and history stay); a student with no class sees no class content.
+router.put('/students/:id', (req, res) => {
+  const st = (inMemoryStore.users || []).find(u => u.role === 'STUDENT' && u.id === req.params.id);
+  if (!st) return res.status(404).json({ success: false, error: 'Student not found.' });
+  const from = String(req.body.fromSection || '').trim();
+  if (from && String(st.section || '') !== from) return res.status(409).json({ success: false, error: 'This student is no longer in that class.' });
+  const to = String(req.body.section || '').trim();
+  const known = (inMemoryStore.classes || []).some(c => (c.id || c.key || c.section) === to);
+  if (!to || !known) return res.status(400).json({ success: false, error: 'Choose a valid class.' });
+  st.section = to;
+  st.grade = (to.match(/^\d+/) || [st.grade])[0];
+  if (req.body.name) st.full_name = String(req.body.name).trim().slice(0, 80);
+  if (req.body.rollNumber) st.roll_number = String(req.body.rollNumber).trim().slice(0, 20);
+  res.json({ success: true, student: st, message: `${st.full_name} moved to ${to}.` });
+});
+router.delete('/students/:id', (req, res) => {
+  const st = (inMemoryStore.users || []).find(u => u.role === 'STUDENT' && u.id === req.params.id);
+  if (!st) return res.status(404).json({ success: false, error: 'Student not found.' });
+  const from = String(req.query.section || '').trim();
+  if (!from || String(st.section || '') !== from) return res.status(409).json({ success: false, error: 'This student is not in that class.' });
+  st.previous_section = st.section;
+  st.section = '';
+  st.removed_at = new Date().toISOString();
+  res.json({ success: true, student: { id: st.id, name: st.full_name }, message: `${st.full_name} was removed from ${from}.` });
+});
+
 // 5e. POST /api/curriculum/students - Add/enroll a new student into class roster
 router.post('/students', (req, res) => {
   try {

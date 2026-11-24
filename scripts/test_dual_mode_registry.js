@@ -76,8 +76,9 @@ async function main() {
     const compTabs = cfg.body.tenant.modes.COMPETITIVE.tabs.teacher.map(t => t.id);
     // Board: Create Test, Class Progress, Question Bank (chapter-wise PYQ), Scan Sheets, NCERT (exercise, examples, exemplar)
     assert.deepStrictEqual(boardTabs, ['createTest', 'classProgress', 'questionBank', 'classDesk', 'studyBoard', 'scanSheets', 'ncertCore'], `board tabs: ${boardTabs}`);
-    // Competitive: Create Test, Class Progress, Question Bank (chapter-wise PYQ), NCERT, Roadmap, chapter-wise DPP, Cheat Sheet. No Scan Sheets.
-    assert.deepStrictEqual(compTabs, ['createTest', 'classProgress', 'questionBank', 'classDesk', 'studyBoard', 'ncertCore', 'roadmap', 'practiceDpp', 'cheatSheets'], `competitive tabs: ${compTabs}`);
+    // Competitive: Tests & DPPs, Class Progress, Question Bank, NCERT, Roadmap, Cheat Sheet. No Scan Sheets.
+    // (2026-11-24) Teachers make DPPs inside Tests & DPPs, so there is no separate teacher DPP tab.
+    assert.deepStrictEqual(compTabs, ['createTest', 'classProgress', 'questionBank', 'classDesk', 'studyBoard', 'ncertCore', 'roadmap', 'cheatSheets'], `competitive tabs: ${compTabs}`);
     // The "at most 7 nav items" rule is kept by the frontend shell: js/appShell.js shows 7 tabs and puts the rest under "More".
     assert(boardTabs.length <= 7, 'board mode should fit the top bar without a More menu');
   });
@@ -95,7 +96,8 @@ async function main() {
     assert.deepStrictEqual(demo.body.tenant.activeModes, ['BOARD']);
     const tabs = demo.body.tenant.modes.BOARD.tabs.teacher.map(t => t.id);
     assert(!tabs.includes('scanSheets'), 'scanSheets should be off for demo school');
-    assert(tabs.includes('practiceDpp'), 'board homework DPP should be on for demo school');
+    assert(!tabs.includes('practiceDpp'), 'teachers make DPPs in Tests & DPPs (no separate teacher DPP tab)');
+    assert(demo.body.tenant.modes.BOARD.tabs.student.map(t => t.id).includes('practiceDpp'), 'students still get the DPP tool when the school turns it on');
     assert(!tabs.includes('cheatSheets'), 'cheat sheets should be off for demo school');
   });
   await check('unknown school id returns 404', async () => {

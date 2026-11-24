@@ -794,7 +794,10 @@ router.get('/subject-banks/:subjectKey', (req, res) => {
     }
 
     const { chapter, difficulty, targetExam, grade, mode, board, stream } = req.query;
+    try { require('../services/questionBankService').applySavedSolutions(); } catch (e) { /* AI solutions are optional */ }
     let filtered = applyModeFilter([...tableData], { mode, board, stream }, targetKey);
+    // HP Board (2026-11-24): see services/bankFilter.js
+    if (String(mode || '').toUpperCase() === 'BOARD') filtered = filtered.filter(q => require('../services/bankFilter').keepForBoard(q, board));
 
     if (grade && grade !== 'ALL') {
       filtered = filtered.filter(q => String(q.grade) === String(grade));

@@ -21,4 +21,6 @@ router.post('/saved', handle('QUESTION BANK', req => bank.setSaved(req.body || {
 router.get('/reports', handle('QUESTION BANK', req => ({ reports: bank.reports(req.query.teacherId, req.query.subjectKey) })));
 router.post('/reports', handle('QUESTION BANK', req => ({ report: bank.report(req.body || {}) })));
 router.post('/reports/:id/resolve', handle('QUESTION BANK', req => ({ report: bank.resolve(req.params.id, req.body || {}) })));
+router.post('/questions/:id/solution', handle('QUESTION BANK', req => bank.detailedSolution(req.params.id, req.body || {})));
+router.post('/generate', handle('QUESTION BANK', req => bank.generateDrafts(req.body || {})));
 module.exports = router;

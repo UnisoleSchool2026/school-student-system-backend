@@ -63,6 +63,7 @@ router.get('/', (req, res) => {
     const forStudent = sid || String(req.query.availableOnly || '') === '1';
     if (forStudent) {
       list = list.filter(a => {
+        if (sid && Array.isArray(a.assignedStudentIds) && a.assignedStudentIds.length && !a.assignedStudentIds.includes(sid)) return false;
         if (!a.schedule) return true;
         if (sid && schedule.hasSubmitted('TEST', a.id, sid)) return false;
         if (sid && schedule.hasStarted('TEST', a.id, sid)) {
@@ -193,7 +194,7 @@ router.post('/', async (req, res) => {
           benchmark_time_seconds: Number(q.benchmark_time_seconds) || 90,
           question_latex: q.question_latex,
           options_latex: q.options_latex || [],
-          correct_answer: q.correct_answer || q.correct_answer_latex || 'A',
+          correct_answer: q.correct_answer || q.correct_answer_latex || ((q.options_latex || []).find(o => o && o.is_correct) || {}).key || null,
           solution_latex: q.solution_latex || '',
           socratic_hints: q.socratic_hints || [],
           ncert_mapping: q.ncert_mapping || null,
@@ -283,11 +284,19 @@ router.post('/:id/submit', async (req, res) => {
       const hintsUsed = Number(studentAns.hintsUsed) || 0;
       totalTimeSpent += timeSpent;
 
-      const expectedAnswer = (q.correct_answer || q.correct_answer_latex || 'B').trim();
-      const isCorrect = Boolean(selected && selected.trim() === expectedAnswer);
+      // The answer key comes from the question; a question without one is never auto-marked correct
+      // (it used to fall back to "B"). Numerical answers count when within 1% (or 0.01).
+      const keyed = Array.isArray(q.options_latex) ? q.options_latex.find(o => o && o.is_correct) : null;
+      const expectedAnswer = String((keyed && keyed.key) || q.correct_answer || q.correct_answer_latex || '').trim();
+      const numericQ = /NUMERIC|INTEGER/.test(String(q.type || q.question_type || '').toUpperCase()) && !(q.options_latex || []).length;
+      const numOf = v => { const m = /-?\d+(?:\.\d+)?(?:e-?\d+)?/i.exec(String(v || '').replace(/,/g, '')); return m ? Number(m[0]) : null; };
+      const isCorrect = Boolean(selected && expectedAnswer && (numericQ
+        ? (numOf(selected) !== null && numOf(expectedAnswer) !== null && Math.abs(numOf(selected) - numOf(expectedAnswer)) <= Math.max(0.01, Math.abs(numOf(expectedAnswer)) * 0.01))
+        : selected.trim().toUpperCase() === expectedAnswer.toUpperCase()));
 
       const qPositiveMarks = q.marks !== undefined ? Number(q.marks) : defaultMarksPerQ;
-      const marksForQ = isCorrect ? qPositiveMarks : (selected ? -negativePenalty : 0.0);
+      const qNeg = q.negative !== undefined && q.negative !== null ? Math.abs(Number(q.negative) || 0) : negativePenalty;
+      const marksForQ = isCorrect ? qPositiveMarks : (selected ? -qNeg : 0.0);
       rawScore += marksForQ;
 
       const benchmark = q.benchmark_time_seconds || 90;
@@ -697,7 +706,7 @@ router.post('/auto-generate', async (req, res) => {
           benchmark_time_seconds: Number(q.benchmark_time_seconds) || 90,
           question_latex: q.question_latex,
           options_latex: q.options_latex || [],
-          correct_answer: q.correct_answer || q.correct_answer_latex || 'A',
+          correct_answer: q.correct_answer || q.correct_answer_latex || ((q.options_latex || []).find(o => o && o.is_correct) || {}).key || null,
           solution_latex: q.solution_latex || '',
           socratic_hints: q.socratic_hints || [],
           ncert_mapping: q.ncert_mapping || null,

@@ -17,14 +17,14 @@
       "tone": "blue",
       "labels": {
         "BOARD": {
-          "title": "Create Test & Paper",
-          "subtitle": "Unit Tests & Full Board Papers",
-          "badge": "Paper Studio"
+          "title": "Tests & DPPs",
+          "subtitle": "Unit tests, full board papers and DPPs",
+          "badge": ""
         },
         "COMPETITIVE": {
-          "title": "Create Test & Paper",
-          "subtitle": "Timed tests with NTA marking",
-          "badge": "Paper Studio"
+          "title": "Tests & DPPs",
+          "subtitle": "Difficulty-wise tests, full-length mocks and DPPs",
+          "badge": ""
         }
       }
     },
@@ -207,32 +207,6 @@
           "title": "Roadmap",
           "subtitle": "Topic weightage & countdown",
           "badge": "Roadmap"
-        }
-      }
-    },
-    {
-      "id": "practiceDpp",
-      "target": {
-        "type": "module",
-        "moduleId": "dpp"
-      },
-      "modes": [
-        "BOARD",
-        "COMPETITIVE"
-      ],
-      "featureFlag": "dailyPracticeProblems",
-      "icon": "calendar-check",
-      "tone": "blue",
-      "labels": {
-        "BOARD": {
-          "title": "Homework Sets",
-          "subtitle": "Chapter-wise daily practice",
-          "badge": "Homework"
-        },
-        "COMPETITIVE": {
-          "title": "Chapter-wise DPP",
-          "subtitle": "Daily timed problems & streak",
-          "badge": "DPP"
         }
       }
     },
